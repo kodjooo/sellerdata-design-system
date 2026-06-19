@@ -33,21 +33,14 @@
                 </div>
 
                 <DsCard radius="md" padding="--size-2">
-                    <DsTable :columns="cols" :rows="rows" row-key="id" expandable>
-                        <!-- Сортируемые заголовки: каретка; активная сортировка — по Прибыли -->
-                        <template v-for="c in cols" :key="`h-${c.key}`" #[`head-${c.key}`]="{ column }">
-                            <span class="th" :class="{ 'th--num': column.numeric }">
-                                {{ column.label }}<span v-if="column.numeric" class="th__sort" :class="{ 'is-active': column.key === 'profit' }">▾</span>
-                            </span>
-                        </template>
+                    <DsTable :columns="cols" :rows="rows" row-key="id" expandable default-sort-key="profit">
                         <template #cell-name="{ row, depth }">
-                            <span class="prod" :class="{ 'prod--child': depth }">
-                                <span v-if="!depth" class="prod__thumb" aria-hidden="true"></span>
-                                <span class="prod__body">
-                                    <span class="t-body-s prod__name">{{ row.name }}</span>
-                                    <span v-if="row.nm" class="t-caption prod__meta">{{ row.nm }} / {{ row.article }}</span>
-                                </span>
-                            </span>
+                            <DsProductCell
+                                :name="row.name"
+                                :sub="row.nm ? `${row.nm} / ${row.article}` : ''"
+                                :hide-thumb="!!depth"
+                                :style="depth ? { paddingLeft: 'var(--size-16)' } : null"
+                            />
                         </template>
                         <template #cell-profit="{ row }">
                             <span :class="neg(row.profit) ? 'screen__neg' : 'screen__pos'">{{ row.profit }}</span>
@@ -72,27 +65,7 @@
                 </DsCard>
                 <DsCard radius="lg" class="screen__chart-summary">
                     <DsTabs v-model="sumTab" :tabs="sumTabs" />
-                    <dl class="sum">
-                        <template v-for="(r, i) in summary" :key="r.label">
-                            <div
-                                class="sum__row"
-                                :class="{ 'sum__row--strong': r.strong, 'sum__row--bg': r.bg, 'sum__row--exp': r.children }"
-                                @click="r.children && toggle(i)"
-                            >
-                                <dt class="t-body-s sum__label">
-                                    <span v-if="r.children" class="sum__chev" :class="{ open: open.has(i) }" aria-hidden="true">▸</span>
-                                    {{ r.label }}
-                                </dt>
-                                <dd class="t-body-s sum__value">{{ r.value }}</dd>
-                            </div>
-                            <template v-if="r.children && open.has(i)">
-                                <div v-for="c in r.children" :key="c.label" class="sum__row sum__row--child">
-                                    <dt class="t-body-s sum__label">{{ c.label }}</dt>
-                                    <dd class="t-body-s sum__value">{{ c.value }}</dd>
-                                </div>
-                            </template>
-                        </template>
-                    </dl>
+                    <DsInfoList :items="summary" :default-open="[0]" class="screen__sumlist" />
                 </DsCard>
             </div>
         </div>
@@ -111,6 +84,8 @@ import DsButton from '@/Components/Ds/DsButton.vue';
 import DsSelect from '@/Components/Ds/DsSelect.vue';
 import DsTable from '@/Components/Ds/DsTable.vue';
 import DsPagination from '@/Components/Ds/DsPagination.vue';
+import DsProductCell from '@/Components/Ds/DsProductCell.vue';
+import DsInfoList from '@/Components/Ds/DsInfoList.vue';
 
 const nav = [
     { key: 'dashboard', label: 'Дэшборд', icon: '▦', href: '#' },
@@ -158,18 +133,18 @@ const groups = ['Не группировать', 'Артикулу', 'Бренд
 // Таблица товаров — реальный состав колонок дашборда (13 + first).
 const cols = [
     { key: 'name', label: 'Товары', width: '22%' },
-    { key: 'sold', label: 'Продано', numeric: true },
-    { key: 'returned', label: 'Возвращено', numeric: true },
-    { key: 'sales', label: 'Продажи', numeric: true },
-    { key: 'refunds', label: 'Возвраты', numeric: true },
-    { key: 'deduction', label: 'Удержания', numeric: true },
-    { key: 'ads', label: 'Реклама', numeric: true },
-    { key: 'profit', label: 'Прибыль', numeric: true },
-    { key: 'profitUnit', label: 'Прибыль на ед.', numeric: true },
-    { key: 'margin', label: 'Маржа', numeric: true },
-    { key: 'roi', label: 'ROI', numeric: true },
-    { key: 'drr', label: 'ДРР', numeric: true },
-    { key: 'redemption', label: 'Выкупаемость', numeric: true },
+    { key: 'sold', label: 'Продано', numeric: true, sortable: true },
+    { key: 'returned', label: 'Возвращено', numeric: true, sortable: true },
+    { key: 'sales', label: 'Продажи', numeric: true, sortable: true },
+    { key: 'refunds', label: 'Возвраты', numeric: true, sortable: true },
+    { key: 'deduction', label: 'Удержания', numeric: true, sortable: true },
+    { key: 'ads', label: 'Реклама', numeric: true, sortable: true },
+    { key: 'profit', label: 'Прибыль', numeric: true, sortable: true },
+    { key: 'profitUnit', label: 'Прибыль на ед.', numeric: true, sortable: true },
+    { key: 'margin', label: 'Маржа', numeric: true, sortable: true },
+    { key: 'roi', label: 'ROI', numeric: true, sortable: true },
+    { key: 'drr', label: 'ДРР', numeric: true, sortable: true },
+    { key: 'redemption', label: 'Выкупаемость', numeric: true, sortable: true },
     { key: 'info', label: 'Инфо', align: 'center', width: 'var(--size-48)' },
 ];
 // Реальные данные строки из живого дашборда (account 4) + 2 близкие по виду.
@@ -201,8 +176,6 @@ const chartSeries = [
 ];
 const sumTab = ref('month');
 const sumTabs = [{ key: 'month', label: 'Июнь 2026' }, { key: 'all', label: 'Весь период' }];
-const open = ref(new Set([0]));
-function toggle(i) { const n = new Set(open.value); n.has(i) ? n.delete(i) : n.add(i); open.value = n; }
 const summary = [
     { label: 'Продажи', value: '740 319,80 ₽', children: [
         { label: 'Количество товаров', value: '302' },
@@ -236,18 +209,7 @@ const summary = [
 .screen__filters { display: flex; align-items: center; gap: var(--size-8); flex-wrap: wrap; }
 .screen__tablefoot { display: flex; align-items: center; justify-content: space-between; gap: var(--size-16); flex-wrap: wrap; }
 
-/* Сортируемые заголовки */
-.th { display: inline-flex; align-items: center; gap: var(--size-4); }
-.th--num { justify-content: flex-end; }
-.th__sort { color: var(--text-placeholder); font-size: 10px; }
-.th__sort.is-active { color: var(--brand); }
-
-.prod { display: inline-flex; align-items: center; gap: var(--size-8); min-width: 0; }
-.prod--child { padding-left: var(--size-16); }
-.prod__thumb { flex: 0 0 auto; width: var(--size-40); height: var(--size-40); border-radius: var(--radius-sm); background: var(--surface-muted); }
-.prod__body { display: inline-flex; flex-direction: column; min-width: 0; }
-.prod__name { color: var(--text-heading); white-space: normal; }
-.prod__meta { color: var(--text-muted); }
+/* Кнопка «→» в колонке Инфо. */
 .prod__more { border: 0; background: transparent; color: var(--text-muted); font-size: var(--font-size-title-m); line-height: 1; cursor: pointer; }
 .prod__more:hover { color: var(--brand); }
 .screen__pos { color: var(--accent-positive); }
@@ -255,15 +217,5 @@ const summary = [
 
 .screen__chart { display: grid; grid-template-columns: 1fr; gap: var(--size-16); }
 @media (min-width: 992px) { .screen__chart { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); align-items: start; } }
-.sum { margin: var(--size-12) 0 0; padding: 0; }
-.sum__row { display: flex; align-items: center; justify-content: space-between; padding: var(--size-8) 0; border-bottom: 1px solid var(--border-default); }
-.sum__label { color: var(--text-default); display: inline-flex; align-items: center; gap: var(--size-6); }
-.sum__value { color: var(--text-heading); white-space: nowrap; }
-.sum__row--exp { cursor: pointer; }
-.sum__chev { display: inline-block; color: var(--text-muted); transition: transform var(--transition-fast) var(--ease-standard); }
-.sum__chev.open { transform: rotate(90deg); color: var(--brand); }
-.sum__row--child { padding-left: var(--size-16); }
-.sum__row--child .sum__label { color: var(--text-muted); }
-.sum__row--strong .sum__label, .sum__row--strong .sum__value { color: var(--text-heading); font-weight: 700; }
-.sum__row--bg { background: var(--surface-subtle); margin: 0 calc(var(--size-16) * -1); padding-left: var(--size-16); padding-right: var(--size-16); border-bottom: 0; }
+.screen__sumlist { margin-top: var(--size-12); }
 </style>

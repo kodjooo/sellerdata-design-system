@@ -106,9 +106,29 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    // Колонка, по которой сортировка активна изначально (key из columns с sortable).
+    defaultSortKey: {
+        type: String,
+        default: '',
+    },
 });
 
-const emit = defineEmits(['row-click', 'toggle-expand', 'row-detail']);
+const emit = defineEmits(['row-click', 'toggle-expand', 'row-detail', 'sort']);
+
+// ─── Сортировка (визуальная + событие) ─────────────────────────────
+// Колонка с `sortable: true` получает кликабельный заголовок с кареткой.
+const sortKey = ref(props.defaultSortKey);
+const sortDesc = ref(true);
+function toggleSort(column) {
+    if (!column.sortable) return;
+    if (sortKey.value === column.key) {
+        sortDesc.value = !sortDesc.value;
+    } else {
+        sortKey.value = column.key;
+        sortDesc.value = true;
+    }
+    emit('sort', { key: sortKey.value, desc: sortDesc.value });
+}
 
 // Состояние раскрытия по ключу строки.
 const expandedKeys = ref(new Set());
@@ -248,7 +268,21 @@ defineExpose({ openDetail });
                         :style="widthStyle(column)"
                         scope="col"
                     >
-                        <slot :name="`head-${column.key}`" :column="column">
+                        <button
+                            v-if="column.sortable"
+                            type="button"
+                            class="ds-table__sort"
+                            :class="{ 'is-active': sortKey === column.key }"
+                            @click.stop="toggleSort(column)"
+                        >
+                            <slot :name="`head-${column.key}`" :column="column">{{ column.label }}</slot>
+                            <span
+                                class="ds-table__caret"
+                                :class="{ 'is-active': sortKey === column.key, 'is-asc': sortKey === column.key && !sortDesc }"
+                                aria-hidden="true"
+                            >▾</span>
+                        </button>
+                        <slot v-else :name="`head-${column.key}`" :column="column">
                             {{ column.label }}
                         </slot>
                     </th>
@@ -433,6 +467,32 @@ defineExpose({ openDetail });
 .ds-table__th--right { text-align: right; }
 /* Числовые колонки — узкие за счёт переноса заголовка. */
 .ds-table__th--numeric { width: var(--size-80); }
+
+/* ─── Сортируемый заголовок: кликабельный, с кареткой ─────────── */
+.ds-table__sort {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--size-4);
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: inherit;
+    cursor: pointer;
+}
+.ds-table__th--numeric .ds-table__sort,
+.ds-table__th--right .ds-table__sort { flex-direction: row; }
+.ds-table__sort:hover { color: var(--brand); }
+.ds-table__caret {
+    flex: 0 0 auto;
+    font-size: 10px;
+    line-height: 1;
+    color: var(--text-placeholder);
+    transition: color var(--transition-fast) var(--ease-standard), transform var(--transition-fast) var(--ease-standard);
+}
+.ds-table__caret.is-active { color: var(--brand); }
+.ds-table__caret.is-asc { transform: rotate(180deg); }
 
 /* ─── Sticky-шапка ────────────────────────────────────────────── */
 .ds-table-wrap--sticky .ds-table__head .ds-table__th {
