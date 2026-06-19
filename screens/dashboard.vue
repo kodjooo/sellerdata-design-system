@@ -28,19 +28,24 @@
                     <DsTabs v-model="metric" :tabs="metricTabs" />
                     <div class="screen__filters">
                         <DsSelect v-model="group" :options="groups" placeholder="Группировать по" />
-                        <DsButton variant="secondary">Скачать таблицу (.xls)</DsButton>
                         <DsButton variant="secondary"><template #iconLeft>⚲</template>Фильтр</DsButton>
                     </div>
                 </div>
 
                 <DsCard radius="md" padding="--size-2">
-                    <DsTable :columns="cols" :rows="rows">
-                        <template #cell-name="{ row }">
-                            <span class="prod">
-                                <span class="prod__thumb" aria-hidden="true"></span>
+                    <DsTable :columns="cols" :rows="rows" row-key="id" expandable>
+                        <!-- Сортируемые заголовки: каретка; активная сортировка — по Прибыли -->
+                        <template v-for="c in cols" :key="`h-${c.key}`" #[`head-${c.key}`]="{ column }">
+                            <span class="th" :class="{ 'th--num': column.numeric }">
+                                {{ column.label }}<span v-if="column.numeric" class="th__sort" :class="{ 'is-active': column.key === 'profit' }">▾</span>
+                            </span>
+                        </template>
+                        <template #cell-name="{ row, depth }">
+                            <span class="prod" :class="{ 'prod--child': depth }">
+                                <span v-if="!depth" class="prod__thumb" aria-hidden="true"></span>
                                 <span class="prod__body">
                                     <span class="t-body-s prod__name">{{ row.name }}</span>
-                                    <span class="t-caption prod__meta">{{ row.nm }} / {{ row.article }}</span>
+                                    <span v-if="row.nm" class="t-caption prod__meta">{{ row.nm }} / {{ row.article }}</span>
                                 </span>
                             </span>
                         </template>
@@ -52,6 +57,12 @@
                         </template>
                     </DsTable>
                 </DsCard>
+
+                <!-- Нижняя секция таблицы: экспорт + пагинация (реал .table-last-section) -->
+                <div class="screen__tablefoot">
+                    <DsButton variant="secondary"><template #iconLeft>⬇</template>Скачать таблицу (.xls)</DsButton>
+                    <DsPagination :page="page" :total="126" :per-page="50" @change="p => page = p" />
+                </div>
             </template>
 
             <!-- ─── Вид «Диаграмма» = комбо-график + панель финансовой сводки ─── -->
@@ -99,6 +110,7 @@ import DsChart from '@/Components/Ds/DsChart.vue';
 import DsButton from '@/Components/Ds/DsButton.vue';
 import DsSelect from '@/Components/Ds/DsSelect.vue';
 import DsTable from '@/Components/Ds/DsTable.vue';
+import DsPagination from '@/Components/Ds/DsPagination.vue';
 
 const nav = [
     { key: 'dashboard', label: 'Дэшборд', icon: '▦', href: '#' },
@@ -134,6 +146,9 @@ function row(sales, orders, refunds, payout, profit) {
     ];
 }
 
+// Пагинация таблицы.
+const page = ref(1);
+
 // Тулбар таблицы.
 const metric = ref('sales');
 const metricTabs = [{ key: 'sales', label: 'Продажи' }, { key: 'orders', label: 'Заказы' }];
@@ -142,7 +157,7 @@ const groups = ['Не группировать', 'Артикулу', 'Бренд
 
 // Таблица товаров — реальный состав колонок дашборда (13 + first).
 const cols = [
-    { key: 'name', label: 'Товары' },
+    { key: 'name', label: 'Товары', width: '22%' },
     { key: 'sold', label: 'Продано', numeric: true },
     { key: 'returned', label: 'Возвращено', numeric: true },
     { key: 'sales', label: 'Продажи', numeric: true },
@@ -155,13 +170,17 @@ const cols = [
     { key: 'roi', label: 'ROI', numeric: true },
     { key: 'drr', label: 'ДРР', numeric: true },
     { key: 'redemption', label: 'Выкупаемость', numeric: true },
-    { key: 'info', label: 'Инфо', align: 'center' },
+    { key: 'info', label: 'Инфо', align: 'center', width: 'var(--size-48)' },
 ];
 // Реальные данные строки из живого дашборда (account 4) + 2 близкие по виду.
 const rows = [
     { id: 1, name: 'Ночная сорочка больших размеров', nm: '649546532', article: 'сор-черная',
       sold: '60', returned: '2', sales: '114 448,12 ₽', refunds: '−3 780,00 ₽', deduction: '−58 673,78 ₽', ads: '0,00 ₽',
-      profit: '51 994,34 ₽', profitUnit: '896,45 ₽', margin: '46,98 %', roi: '0,00 %', drr: '0,00 %', redemption: '75,28 %' },
+      profit: '51 994,34 ₽', profitUnit: '896,45 ₽', margin: '46,98 %', roi: '0,00 %', drr: '0,00 %', redemption: '75,28 %',
+      children: [
+        { id: '1-1', name: 'Размер 54', sold: '13', returned: '0', sales: '24 816,00 ₽', refunds: '0,00 ₽', deduction: '−12 788,54 ₽', ads: '0,00 ₽', profit: '12 027,46 ₽', profitUnit: '925,19 ₽', margin: '48,47 %', roi: '0,00 %', drr: '0,00 %', redemption: '66,67 %' },
+        { id: '1-2', name: 'Размер 60', sold: '10', returned: '0', sales: '19 192,12 ₽', refunds: '0,00 ₽', deduction: '−10 128,52 ₽', ads: '0,00 ₽', profit: '9 063,60 ₽', profitUnit: '906,36 ₽', margin: '47,23 %', roi: '0,00 %', drr: '0,00 %', redemption: '—' },
+      ] },
     { id: 2, name: 'Платье рубашка летнее больших размеров', nm: '180294471', article: 'плат-беж-54',
       sold: '34', returned: '5', sales: '64 226,00 ₽', refunds: '−9 450,00 ₽', deduction: '−38 110,40 ₽', ads: '−4 820,00 ₽',
       profit: '−2 184,80 ₽', profitUnit: '−64,26 ₽', margin: '−3,40 %', roi: '−5,12 %', drr: '7,50 %', redemption: '87,18 %' },
@@ -215,8 +234,16 @@ const summary = [
 
 .screen__toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--size-16); flex-wrap: wrap; }
 .screen__filters { display: flex; align-items: center; gap: var(--size-8); flex-wrap: wrap; }
+.screen__tablefoot { display: flex; align-items: center; justify-content: space-between; gap: var(--size-16); flex-wrap: wrap; }
+
+/* Сортируемые заголовки */
+.th { display: inline-flex; align-items: center; gap: var(--size-4); }
+.th--num { justify-content: flex-end; }
+.th__sort { color: var(--text-placeholder); font-size: 10px; }
+.th__sort.is-active { color: var(--brand); }
 
 .prod { display: inline-flex; align-items: center; gap: var(--size-8); min-width: 0; }
+.prod--child { padding-left: var(--size-16); }
 .prod__thumb { flex: 0 0 auto; width: var(--size-40); height: var(--size-40); border-radius: var(--radius-sm); background: var(--surface-muted); }
 .prod__body { display: inline-flex; flex-direction: column; min-width: 0; }
 .prod__name { color: var(--text-heading); white-space: normal; }
