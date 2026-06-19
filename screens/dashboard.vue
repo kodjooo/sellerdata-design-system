@@ -62,18 +62,21 @@
                 <DsTabs v-model="metric" :tabs="metricTabs" />
                 <div class="tbar__right">
                     <button type="button" class="tbar__link fm-download"> Скачать таблицу (.xls)</button>
-                    <DsSelect v-model="group" :options="groups" placeholder="Группировать по" />
+                    <DsSelect v-model="group" :options="groups" placeholder="Группировать по" :show-footer="false" />
                 </div>
             </div>
 
             <DsCard radius="md" padding="--size-2">
                 <DsTable :columns="cols" :rows="rows" row-key="id" expandable default-sort-key="profit">
-                    <template #cell-name="{ row, depth }">
+                    <template #cell-name="{ row }">
+                        <span v-if="row.isGroup" class="grp">{{ row.name }}</span>
                         <DsProductCell
-                            v-if="!depth"
-                            :name="row.name" :copy-id="row.nm" detail
+                            v-else
+                            :name="row.name"
+                            :copy-id="row.isVariant ? '' : row.nm"
+                            :detail="!row.isVariant"
+                            :hide-thumb="row.isVariant"
                         />
-                        <DsProductCell v-else :name="row.name" hide-thumb :style="{ paddingLeft: 'var(--size-16)' }" />
                     </template>
                     <template #cell-profit="{ row }">
                         <span :class="neg(row.profit) ? 'neg' : 'pos'">{{ row.profit }}</span>
@@ -199,17 +202,31 @@ const cols = computed(() => {
     return [baseCols[0], lead, ...baseCols.slice(2)];
 });
 
-const rows = [
+const products = [
     { id: 1, name: 'Капли для носа', nm: '200405', lead: '60', returned: '2', sales: '0,00 ₽', refunds: '−598,00 ₽', deduction: '−3 845,15 ₽', ads: '0,00 ₽', profit: '6 928,46 ₽', profitUnit: '177,65 ₽', margin: '64,82 %', roi: '291,06 %', drr: '0,00 %', redemption: '96,7 %',
       children: [
-        { id: '1a', name: 'Размер S', lead: '28', returned: '1', sales: '0,00 ₽', refunds: '−299,00 ₽', deduction: '−1 922,00 ₽', ads: '0,00 ₽', profit: '3 460,00 ₽', profitUnit: '178,00 ₽', margin: '64,8 %', roi: '290,0 %', drr: '0,00 %', redemption: '96,4 %' },
-        { id: '1b', name: 'Размер M', lead: '32', returned: '1', sales: '0,00 ₽', refunds: '−299,00 ₽', deduction: '−1 923,15 ₽', ads: '0,00 ₽', profit: '3 468,46 ₽', profitUnit: '177,30 ₽', margin: '64,9 %', roi: '292,0 %', drr: '0,00 %', redemption: '97,0 %' },
+        { id: '1a', isVariant: true, name: 'Размер S', lead: '28', returned: '1', sales: '0,00 ₽', refunds: '−299,00 ₽', deduction: '−1 922,00 ₽', ads: '0,00 ₽', profit: '3 460,00 ₽', profitUnit: '178,00 ₽', margin: '64,8 %', roi: '290,0 %', drr: '0,00 %', redemption: '96,4 %' },
+        { id: '1b', isVariant: true, name: 'Размер M', lead: '32', returned: '1', sales: '0,00 ₽', refunds: '−299,00 ₽', deduction: '−1 923,15 ₽', ads: '0,00 ₽', profit: '3 468,46 ₽', profitUnit: '177,30 ₽', margin: '64,9 %', roi: '292,0 %', drr: '0,00 %', redemption: '97,0 %' },
       ] },
     { id: 2, name: 'Масло для массажа', nm: '325546', lead: '71', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−21 923,60 ₽', ads: '0,00 ₽', profit: '16 825,92 ₽', profitUnit: '431,43 ₽', margin: '64,35 %', roi: '210,4 %', drr: '0,00 %', redemption: '98,1 %' },
     { id: 3, name: 'Маска для сна', nm: '116018', lead: '61', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−2 235,38 ₽', ads: '0,00 ₽', profit: '4 027,31 ₽', profitUnit: '149,16 ₽', margin: '64,82 %', roi: '188,2 %', drr: '0,00 %', redemption: '95,3 %' },
     { id: 4, name: 'Соска-пустышка', nm: '156004', lead: '33', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−29 895,15 ₽', ads: '0,00 ₽', profit: '28 026,09 ₽', profitUnit: '1 077,93 ₽', margin: '64,29 %', roi: '171,0 %', drr: '0,00 %', redemption: '94,9 %' },
     { id: 5, name: 'Штора для душа', nm: '702202', lead: '28', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−19 288,96 ₽', ads: '0,00 ₽', profit: '19 215,98 ₽', profitUnit: '768,64 ₽', margin: '64,40 %', roi: '180,5 %', drr: '0,00 %', redemption: '93,1 %' },
 ];
+
+// Группировка по бренду: строки-группы с суммой и раскрытием в товары (реал «Группировать по бренду»).
+const brandGroups = [
+    { id: 'g1', isGroup: true, name: 'BRAND6a0c481f9bee', lead: '69', returned: '0', sales: '122 924,79 ₽', refunds: '0,00 ₽', deduction: '−35 626,74 ₽', ads: '0,00 ₽', profit: '69 564,73 ₽', profitUnit: '1 008,18 ₽', margin: '56,59 %', roi: '2 910,66 %', drr: '0,00 %', redemption: '95,1 %',
+      children: products.slice(0, 3) },
+    { id: 'g2', isGroup: true, name: 'BRAND6a0c481f9f0f', lead: '8', returned: '1', sales: '17 087,60 ₽', refunds: '−3 637,89 ₽', deduction: '−3 496,92 ₽', ads: '0,00 ₽', profit: '8 674,53 ₽', profitUnit: '1 239,22 ₽', margin: '64,50 %', roi: '248,0 %', drr: '0,00 %', redemption: '90,0 %',
+      children: products.slice(3, 5) },
+    { id: 'g3', isGroup: true, name: 'Нет бренда', lead: '3', returned: '0', sales: '9 380,00 ₽', refunds: '0,00 ₽', deduction: '−2 720,20 ₽', ads: '0,00 ₽', profit: '6 050,44 ₽', profitUnit: '2 016,81 ₽', margin: '64,50 %', roi: '222,4 %', drr: '0,00 %', redemption: '88,0 %',
+      children: products.slice(1, 3) },
+];
+
+// Итоговый набор строк зависит от выбора «Группировать по».
+const rows = computed(() => (group.value === 'Бренду' || group.value === 'Артикулу' ? brandGroups : products));
+
 function neg(v) { return typeof v === 'string' && v.includes('−'); }
 </script>
 
@@ -246,6 +263,7 @@ function neg(v) { return typeof v === 'string' && v.includes('−'); }
 .tbar__right { display: flex; align-items: center; gap: var(--size-16); flex-wrap: wrap; }
 .tbar__link { border: 0; background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; display: inline-flex; align-items: center; gap: var(--size-4); }
 
+.grp { font-weight: var(--font-weight-semibold); color: var(--text-heading); }
 .more-btn { border: 0; background: transparent; color: var(--text-muted); font-size: var(--font-size-title-m); line-height: 1; cursor: pointer; }
 .more-btn:hover { color: var(--brand); }
 .pos { color: var(--accent-positive); }
