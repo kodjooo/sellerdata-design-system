@@ -34,15 +34,21 @@
                 </div>
 
                 <DsCard radius="md" padding="--size-2">
-                    <DsTable :columns="cols" :rows="rows" mobile-mode="scroll" detail-title="Товар">
+                    <DsTable :columns="cols" :rows="rows">
                         <template #cell-name="{ row }">
                             <span class="prod">
-                                <span class="t-body-s prod__name">{{ row.name }}</span>
-                                <span class="t-caption prod__meta">{{ row.brand }} · {{ row.article }}</span>
+                                <span class="prod__thumb" aria-hidden="true"></span>
+                                <span class="prod__body">
+                                    <span class="t-body-s prod__name">{{ row.name }}</span>
+                                    <span class="t-caption prod__meta">{{ row.nm }} / {{ row.article }}</span>
+                                </span>
                             </span>
                         </template>
                         <template #cell-profit="{ row }">
                             <span :class="neg(row.profit) ? 'screen__neg' : 'screen__pos'">{{ row.profit }}</span>
+                        </template>
+                        <template #cell-info>
+                            <button type="button" class="prod__more fm-chevron-right" aria-label="Подробнее"></button>
                         </template>
                     </DsTable>
                 </DsCard>
@@ -149,17 +155,19 @@ const cols = [
     { key: 'roi', label: 'ROI', numeric: true },
     { key: 'drr', label: 'ДРР', numeric: true },
     { key: 'redemption', label: 'Выкупаемость', numeric: true },
+    { key: 'info', label: 'Инфо', align: 'center' },
 ];
+// Реальные данные строки из живого дашборда (account 4) + 2 близкие по виду.
 const rows = [
-    { id: 1, name: 'Платье рубашка летнее больших размеров', brand: 'MIRA.bell', article: '180294471',
-      sold: '142', returned: '6', sales: '347 580 ₽', refunds: '−14 700 ₽', deduction: '−108 240 ₽', ads: '−9 320 ₽',
-      profit: '128 410 ₽', profitUnit: '904 ₽', margin: '38,6%', roi: '92,4%', drr: '2,7%', redemption: '95,8%' },
-    { id: 2, name: 'Костюм брючный женский офисный', brand: 'MIRA.bell', article: '174553902',
-      sold: '88', returned: '11', sales: '264 000 ₽', refunds: '−33 000 ₽', deduction: '−96 480 ₽', ads: '−18 040 ₽',
-      profit: '−4 120 ₽', profitUnit: '−47 ₽', margin: '−1,8%', roi: '−3,1%', drr: '6,8%', redemption: '88,9%' },
-    { id: 3, name: 'Блуза свободного кроя с воротником', brand: 'MIRA.bell', article: '169920418',
-      sold: '64', returned: '2', sales: '128 640 ₽', refunds: '−4 020 ₽', deduction: '−41 200 ₽', ads: '−3 110 ₽',
-      profit: '39 980 ₽', profitUnit: '625 ₽', margin: '32,1%', roi: '78,5%', drr: '2,4%', redemption: '96,9%' },
+    { id: 1, name: 'Ночная сорочка больших размеров', nm: '649546532', article: 'сор-черная',
+      sold: '60', returned: '2', sales: '114 448,12 ₽', refunds: '−3 780,00 ₽', deduction: '−58 673,78 ₽', ads: '0,00 ₽',
+      profit: '51 994,34 ₽', profitUnit: '896,45 ₽', margin: '46,98 %', roi: '0,00 %', drr: '0,00 %', redemption: '75,28 %' },
+    { id: 2, name: 'Платье рубашка летнее больших размеров', nm: '180294471', article: 'плат-беж-54',
+      sold: '34', returned: '5', sales: '64 226,00 ₽', refunds: '−9 450,00 ₽', deduction: '−38 110,40 ₽', ads: '−4 820,00 ₽',
+      profit: '−2 184,80 ₽', profitUnit: '−64,26 ₽', margin: '−3,40 %', roi: '−5,12 %', drr: '7,50 %', redemption: '87,18 %' },
+    { id: 3, name: 'Костюм брючный женский офисный', nm: '174553902', article: 'кост-син-50',
+      sold: '41', returned: '1', sales: '98 359,00 ₽', refunds: '−2 390,00 ₽', deduction: '−44 870,12 ₽', ads: '−1 980,00 ₽',
+      profit: '36 118,76 ₽', profitUnit: '880,94 ₽', margin: '36,72 %', roi: '71,40 %', drr: '2,01 %', redemption: '97,56 %' },
 ];
 function neg(v) { return typeof v === 'string' && v.includes('−'); }
 
@@ -208,9 +216,13 @@ const summary = [
 .screen__toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--size-16); flex-wrap: wrap; }
 .screen__filters { display: flex; align-items: center; gap: var(--size-8); flex-wrap: wrap; }
 
-.prod { display: inline-flex; flex-direction: column; min-width: 0; }
-.prod__name { color: var(--text-heading); }
+.prod { display: inline-flex; align-items: center; gap: var(--size-8); min-width: 0; }
+.prod__thumb { flex: 0 0 auto; width: var(--size-40); height: var(--size-40); border-radius: var(--radius-sm); background: var(--surface-muted); }
+.prod__body { display: inline-flex; flex-direction: column; min-width: 0; }
+.prod__name { color: var(--text-heading); white-space: normal; }
 .prod__meta { color: var(--text-muted); }
+.prod__more { border: 0; background: transparent; color: var(--text-muted); font-size: var(--font-size-title-m); line-height: 1; cursor: pointer; }
+.prod__more:hover { color: var(--brand); }
 .screen__pos { color: var(--accent-positive); }
 .screen__neg { color: var(--status-danger); }
 
