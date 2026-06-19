@@ -1,79 +1,98 @@
 <template>
     <Head title="Дэшборд — экран-эталон" />
     <DsAppShell :items="nav" active="dashboard">
-        <template #title>Дэшборд</template>
+        <template #logo><span class="brand">sellerdata</span></template>
+        <template #title>
+            <span class="topbar">
+                <strong class="t-title-m topbar__page">Дэшборд</strong>
+                <DsTabs v-model="view" :tabs="views" class="topbar__tabs" />
+            </span>
+        </template>
         <template #actions>
-            <DsTabs v-model="view" :tabs="views" />
+            <span class="fm-help-circle topbar__ico" aria-hidden="true"></span>
+            <span class="fm-bell topbar__ico" aria-hidden="true"></span>
+            <span class="acc">
+                <span class="acc__avatar" aria-hidden="true">Д</span>
+                <span class="acc__body">
+                    <span class="t-label-m acc__name">Демо аккаунт</span>
+                    <span class="t-caption acc__store">Дополнительный магазин</span>
+                </span>
+            </span>
         </template>
 
         <div class="screen">
-            <!-- ─── Вид «Плитки» = период-карточки + тулбар + таблица товаров ─── -->
-            <template v-if="view === 'grid'">
-                <div class="screen__periods">
-                    <DsSummaryCard
-                        v-for="p in periods"
-                        :key="p.title"
-                        :title="p.title"
-                        :subtitle="p.subtitle"
-                        :gradient="p.gradient"
-                        :icon="p.icon"
-                        featured-first
-                        :metrics="p.metrics"
-                    >
-                        <template #footer><button type="button" class="screen__more">Больше</button></template>
-                    </DsSummaryCard>
-                </div>
+            <!-- Онбординг-баннер -->
+            <DsNotice v-model:visible="hintOpen" tone="plain">
+                <template #media><span class="hint-thumb" aria-hidden="true"></span></template>
+                Используйте Панель инструментов для анализа ключевых показателей эффективности.
+                Нажмите «Больше» в плитках периодов или стрелку справа в строке товара, чтобы увидеть
+                подробный расчёт. Для детального анализа установите фильтр; вкладка «Диаграмма» — для
+                графического отображения данных за выбранный период.
+            </DsNotice>
 
-                <div class="screen__toolbar">
-                    <DsTabs v-model="metric" :tabs="metricTabs" />
-                    <div class="screen__filters">
-                        <DsSelect v-model="group" :options="groups" placeholder="Группировать по" />
-                        <DsButton variant="secondary"><template #iconLeft>⚲</template>Фильтр</DsButton>
-                    </div>
-                </div>
+            <!-- Верхний тулбар: поиск + фильтр + период -->
+            <div class="bar">
+                <DsSelect v-model="search" :options="[]" placeholder="Товары" searchable class="bar__search" />
+                <DsButton variant="secondary"><template #iconLeft>⚲</template>Фильтр</DsButton>
+                <button type="button" class="bar__date fm-calendar" aria-label="Период"></button>
+            </div>
 
-                <DsCard radius="md" padding="--size-2">
-                    <DsTable :columns="cols" :rows="rows" row-key="id" expandable default-sort-key="profit">
-                        <template #cell-name="{ row, depth }">
-                            <DsProductCell
-                                :name="row.name"
-                                :sub="row.nm ? `${row.nm} / ${row.article}` : ''"
-                                :hide-thumb="!!depth"
-                                :style="depth ? { paddingLeft: 'var(--size-16)' } : null"
-                            />
-                        </template>
-                        <template #cell-profit="{ row }">
-                            <span :class="neg(row.profit) ? 'screen__neg' : 'screen__pos'">{{ row.profit }}</span>
-                        </template>
-                        <template #cell-info>
-                            <button type="button" class="prod__more fm-chevron-right" aria-label="Подробнее"></button>
-                        </template>
-                    </DsTable>
-                </DsCard>
-
-                <!-- Нижняя секция таблицы: экспорт + пагинация (реал .table-last-section) -->
-                <div class="screen__tablefoot">
-                    <DsButton variant="secondary"><template #iconLeft>⬇</template>Скачать таблицу (.xls)</DsButton>
-                    <DsPagination :page="page" :total="126" :per-page="50" @change="p => page = p" />
-                </div>
-            </template>
-
-            <!-- ─── Вид «Диаграмма» = комбо-график + панель финансовой сводки ─── -->
-            <div v-else class="screen__chart">
-                <DsCard radius="lg" class="screen__chart-graph">
+            <!-- ВЕРХНИЙ БЛОК — переключается вкладками Плитки/Диаграмма -->
+            <div v-if="view === 'grid'" class="periods">
+                <DsSummaryCard
+                    v-for="p in periods" :key="p.title"
+                    :title="p.title" :subtitle="p.subtitle" :gradient="p.gradient" :icon="p.icon"
+                    featured-first :metrics="p.metrics"
+                >
+                    <template #footer><button type="button" class="more">Больше</button></template>
+                </DsSummaryCard>
+            </div>
+            <div v-else class="chart">
+                <DsCard radius="lg" class="chart__graph">
                     <DsChart :labels="chartLabels" :series="chartSeries" />
                 </DsCard>
-                <DsCard radius="lg" class="screen__chart-summary">
+                <DsCard radius="lg" class="chart__sum">
                     <DsTabs v-model="sumTab" :tabs="sumTabs" />
-                    <DsInfoList :items="summary" :default-open="[0]" class="screen__sumlist" />
+                    <DsInfoList :items="summary" :default-open="[0]" class="chart__sumlist" />
                 </DsCard>
+            </div>
+
+            <!-- ТАБЛИЦА ТОВАРОВ — всегда снизу, в обоих видах -->
+            <div class="tbar">
+                <DsTabs v-model="metric" :tabs="metricTabs" />
+                <div class="tbar__right">
+                    <button type="button" class="tbar__link fm-download"> Скачать таблицу (.xls)</button>
+                    <DsSelect v-model="group" :options="groups" placeholder="Группировать по" />
+                </div>
+            </div>
+
+            <DsCard radius="md" padding="--size-2">
+                <DsTable :columns="cols" :rows="rows" row-key="id" expandable default-sort-key="profit">
+                    <template #cell-name="{ row, depth }">
+                        <DsProductCell
+                            v-if="!depth"
+                            :name="row.name" :copy-id="row.nm" detail
+                        />
+                        <DsProductCell v-else :name="row.name" hide-thumb :style="{ paddingLeft: 'var(--size-16)' }" />
+                    </template>
+                    <template #cell-profit="{ row }">
+                        <span :class="neg(row.profit) ? 'neg' : 'pos'">{{ row.profit }}</span>
+                    </template>
+                    <template #cell-info>
+                        <button type="button" class="more-btn fm-chevron-right" aria-label="Подробнее"></button>
+                    </template>
+                </DsTable>
+            </DsCard>
+
+            <div class="tfoot">
+                <DsPagination :page="page" :total="690" :per-page="50" @change="p => page = p" />
             </div>
         </div>
     </DsAppShell>
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import DsAppShell from '@/Components/Ds/DsAppShell.vue';
 import DsSummaryCard from '@/Components/Ds/DsSummaryCard.vue';
@@ -86,54 +105,77 @@ import DsTable from '@/Components/Ds/DsTable.vue';
 import DsPagination from '@/Components/Ds/DsPagination.vue';
 import DsProductCell from '@/Components/Ds/DsProductCell.vue';
 import DsInfoList from '@/Components/Ds/DsInfoList.vue';
+import DsNotice from '@/Components/Ds/DsNotice.vue';
 
 const nav = [
-    { key: 'dashboard', label: 'Дэшборд', icon: '▦', href: '#' },
-    { key: 'products', label: 'Товары', icon: '▭', href: '#' },
-    { key: 'expenses', label: 'Расходы', icon: '↺', href: '#' },
-    { key: 'ads', label: 'Реклама', icon: '◎', href: '#' },
+    { key: 'dashboard', label: 'Дэшборд', icon: 'fm-grid', href: '#' },
+    { key: 'products', label: 'Товары', icon: 'fm-box', href: '#' },
+    { key: 'expenses', label: 'Расходы', icon: 'fm-credit-card', href: '#' },
+    { key: 'redeems', label: 'Самовыкупы', icon: 'fm-refresh-cw', href: '#' },
+    { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: '#' },
+    { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: '#' },
+    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: '#' },
 ];
 
-const view = ref('grid');
-const views = [
-    { key: 'grid', label: 'Плитки' },
-    { key: 'chart', label: 'Диаграмма' },
-];
+const hintOpen = ref(true);
+const view = ref('chart');
+const views = [{ key: 'grid', label: 'Плитки' }, { key: 'chart', label: 'Диаграмма' }];
+const search = ref(null);
 
-// Период-карточки — реальные числа аккаунта (account 4, июнь 2026).
+// ── Период-карточки (реальные числа account 4) ──
 const periods = [
-    { title: 'Сегодня', subtitle: '19.06.2026', gradient: 'blue',
-      metrics: row('0,00 ₽ / 0 шт.', '0,00 ₽ / 0 шт.', '0,00 ₽ / 0 шт.', '0,00 ₽', '0,00 ₽') },
-    { title: 'Вчера', subtitle: '18.06.2026', gradient: 'muted',
-      metrics: row('0,00 ₽ / 0 шт.', '0,00 ₽ / 0 шт.', '0,00 ₽ / 0 шт.', '0,00 ₽', '0,00 ₽') },
-    { title: 'Текущий месяц', subtitle: '01.06.2026 до 19.06.2026', gradient: 'indigo-deep', icon: 'info',
-      metrics: row('740 319,80 ₽ / 302 шт.', '1 168 283,10 ₽ / 464 шт.', '−23 324,00 ₽ / 9 шт.', '279 478,21 ₽', '279 456,21 ₽') },
-    { title: 'Прошлый месяц', subtitle: '01.05.2026 до 31.05.2026', gradient: 'periwinkle',
-      metrics: row('1 192 464,14 ₽ / 486 шт.', '1 967 360,20 ₽ / 779 шт.', '−19 580,00 ₽ / 7 шт.', '335 324,60 ₽', '335 300,60 ₽') },
+    { title: 'Сегодня', subtitle: '11.06.2026', gradient: 'blue', metrics: pm('176 196,45 ₽ / 89 шт.', '173 750,93 ₽ / 110 шт.', '−3 637,89 ₽ / 1 шт.', '122 928,35 ₽', '88 038,35 ₽') },
+    { title: 'Вчера', subtitle: '10.06.2026', gradient: 'muted', metrics: pm('173 322,34 ₽ / 84 шт.', '215 723,77 ₽ / 104 шт.', '−2 541,00 ₽ / 2 шт.', '101 676,38 ₽', '84 747,10 ₽') },
+    { title: 'Текущий месяц', subtitle: '01.06.2026 до 11.06.2026', gradient: 'indigo-deep', icon: 'info', metrics: pm('2 092 470,19 ₽ / 1012 шт.', '2 356 778,09 ₽ / 1197 шт.', '−60 339,70 ₽ / 29 шт.', '1 190 513,03 ₽', '988 134,74 ₽') },
+    { title: 'Прошлый месяц', subtitle: '01.05.2026 до 31.05.2026', gradient: 'periwinkle', metrics: pm('5 153 549,38 ₽ / 2729 шт.', '5 933 740,81 ₽ / 3130 шт.', '−278 682,95 ₽ / 134 шт.', '2 632 463,60 ₽', '2 141 283,49 ₽') },
 ];
-function row(sales, orders, refunds, payout, profit) {
+function pm(sales, orders, refunds, payout, profit) {
     return [
-        { label: 'Продажи', value: sales },
-        { label: 'Заказы', value: orders },
-        { label: 'Возвраты', value: refunds },
-        { label: 'Сумма выплат', value: payout, info: true },
-        { label: 'Прибыль', value: profit, info: true },
+        { label: 'Продажи', value: sales }, { label: 'Заказы', value: orders }, { label: 'Возвраты', value: refunds },
+        { label: 'Сумма выплат', value: payout, info: true }, { label: 'Прибыль', value: profit, info: true },
     ];
 }
 
-// Пагинация таблицы.
-const page = ref(1);
+// ── Диаграмма + сводка ──
+const sumTab = ref('month');
+const sumTabs = [{ key: 'month', label: '1–11 Июнь 2026' }, { key: 'all', label: 'Весь период' }];
+const chartLabels = ['Июль', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек', 'Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июнь'];
+const chartSeries = [
+    { name: 'Заказано', type: 'line', axis: 'right', color: '--chart-blue', values: [0, 5000, 5500, 1500, 6000, 4600, 3700, 3200, 4900, 5800, 5900, 1900] },
+    { name: 'Продано', type: 'line', axis: 'right', color: '--chart-green', values: [0, 7000, 6300, 5000, 4600, 4200, 2900, 2800, 4900, 4900, 4600, 1700] },
+    { name: 'Возвращено', type: 'line', axis: 'right', color: '--chart-red', values: [0, 200, 150, 220, 180, 160, 140, 120, 180, 200, 190, 80] },
+    { name: 'Продажи', type: 'bar', axis: 'left', color: '--chart-purple-light', values: [0, 24000000, 19000000, 13500000, 15500000, 16500000, 12500000, 9000000, 7500000, 10500000, 10000000, 3500000] },
+    { name: 'Прибыль', type: 'bar', axis: 'left', color: '--chart-pink', values: [0, 12000000, 9500000, 6500000, 6500000, 6500000, 4500000, 3500000, 1500000, 4200000, 4000000, 1300000] },
+];
+const summary = [
+    { label: 'Продажи', value: '3 273 560,23 ₽', children: [{ label: 'Количество товаров', value: '1 332' }, { label: 'Продажи со скидкой', value: '3 273 560,23 ₽' }] },
+    { label: 'Возвраты', value: '−88 357,00 ₽', children: [{ label: 'Количество возвратов', value: '38' }] },
+    { label: 'Удержания', value: '−1 681 132,55 ₽', children: [{ label: 'Логистика', value: '−1 184 200,00 ₽' }, { label: 'Комиссия', value: '−496 932,55 ₽' }] },
+    { label: 'Реклама', value: '−6 909,26 ₽', children: [{ label: 'Авто-реклама', value: '−6 909,26 ₽' }] },
+    { label: 'Себестоимость', value: '−1 600,00 ₽', info: true },
+    { label: 'Валовая прибыль', value: '1 495 561,42 ₽' },
+    { label: 'Расходы', value: '0,00 ₽' },
+    { label: 'НДС', value: '−85 428,07 ₽' },
+    { label: 'Налог на доход', value: '−102 513,68 ₽' },
+    { label: 'Прибыль', value: '1 307 619,67 ₽', strong: true },
+    { label: 'Сумма выплат', value: '1 481 379,86 ₽' },
+    { label: 'Маржа', value: '41,05 %', bg: true },
+    { label: 'ROI', value: '81 726,23 %', bg: true, info: true },
+    { label: 'ДРР', value: '0,21 %', bg: true },
+    { label: 'Выкупаемость', value: '90,86 %', bg: true },
+];
 
-// Тулбар таблицы.
-const metric = ref('sales');
+// ── Таблица товаров ──
+const metric = ref('orders');
 const metricTabs = [{ key: 'sales', label: 'Продажи' }, { key: 'orders', label: 'Заказы' }];
 const group = ref(null);
 const groups = ['Не группировать', 'Артикулу', 'Бренду'];
+const page = ref(1);
 
-// Таблица товаров — реальный состав колонок дашборда (13 + first).
-const cols = [
-    { key: 'name', label: 'Товары', width: '22%' },
-    { key: 'sold', label: 'Продано', numeric: true, sortable: true },
+// Колонки зависят от вкладки Продажи/Заказы (реал: «Продажи» — полный набор).
+const baseCols = [
+    { key: 'name', label: 'Товар', width: '22%' },
+    { key: 'lead', label: 'Заказано', numeric: true, sortable: true },          // переопределяется
     { key: 'returned', label: 'Возвращено', numeric: true, sortable: true },
     { key: 'sales', label: 'Продажи', numeric: true, sortable: true },
     { key: 'refunds', label: 'Возвраты', numeric: true, sortable: true },
@@ -147,75 +189,66 @@ const cols = [
     { key: 'redemption', label: 'Выкупаемость', numeric: true, sortable: true },
     { key: 'info', label: 'Инфо', align: 'center', width: 'var(--size-48)' },
 ];
-// Реальные данные строки из живого дашборда (account 4) + 2 близкие по виду.
+const cols = computed(() => {
+    const lead = { ...baseCols[1], label: metric.value === 'orders' ? 'Заказано' : 'Продано' };
+    if (metric.value === 'orders') {
+        // Заказы: без Реклама/Маржа/ROI/ДРР/Выкупаемость
+        const drop = new Set(['ads', 'margin', 'roi', 'drr', 'redemption']);
+        return [baseCols[0], lead, ...baseCols.slice(2).filter((c) => !drop.has(c.key))];
+    }
+    return [baseCols[0], lead, ...baseCols.slice(2)];
+});
+
 const rows = [
-    { id: 1, name: 'Ночная сорочка больших размеров', nm: '649546532', article: 'сор-черная',
-      sold: '60', returned: '2', sales: '114 448,12 ₽', refunds: '−3 780,00 ₽', deduction: '−58 673,78 ₽', ads: '0,00 ₽',
-      profit: '51 994,34 ₽', profitUnit: '896,45 ₽', margin: '46,98 %', roi: '0,00 %', drr: '0,00 %', redemption: '75,28 %',
+    { id: 1, name: 'Капли для носа', nm: '200405', lead: '60', returned: '2', sales: '0,00 ₽', refunds: '−598,00 ₽', deduction: '−3 845,15 ₽', ads: '0,00 ₽', profit: '6 928,46 ₽', profitUnit: '177,65 ₽', margin: '64,82 %', roi: '291,06 %', drr: '0,00 %', redemption: '96,7 %',
       children: [
-        { id: '1-1', name: 'Размер 54', sold: '13', returned: '0', sales: '24 816,00 ₽', refunds: '0,00 ₽', deduction: '−12 788,54 ₽', ads: '0,00 ₽', profit: '12 027,46 ₽', profitUnit: '925,19 ₽', margin: '48,47 %', roi: '0,00 %', drr: '0,00 %', redemption: '66,67 %' },
-        { id: '1-2', name: 'Размер 60', sold: '10', returned: '0', sales: '19 192,12 ₽', refunds: '0,00 ₽', deduction: '−10 128,52 ₽', ads: '0,00 ₽', profit: '9 063,60 ₽', profitUnit: '906,36 ₽', margin: '47,23 %', roi: '0,00 %', drr: '0,00 %', redemption: '—' },
+        { id: '1a', name: 'Размер S', lead: '28', returned: '1', sales: '0,00 ₽', refunds: '−299,00 ₽', deduction: '−1 922,00 ₽', ads: '0,00 ₽', profit: '3 460,00 ₽', profitUnit: '178,00 ₽', margin: '64,8 %', roi: '290,0 %', drr: '0,00 %', redemption: '96,4 %' },
+        { id: '1b', name: 'Размер M', lead: '32', returned: '1', sales: '0,00 ₽', refunds: '−299,00 ₽', deduction: '−1 923,15 ₽', ads: '0,00 ₽', profit: '3 468,46 ₽', profitUnit: '177,30 ₽', margin: '64,9 %', roi: '292,0 %', drr: '0,00 %', redemption: '97,0 %' },
       ] },
-    { id: 2, name: 'Платье рубашка летнее больших размеров', nm: '180294471', article: 'плат-беж-54',
-      sold: '34', returned: '5', sales: '64 226,00 ₽', refunds: '−9 450,00 ₽', deduction: '−38 110,40 ₽', ads: '−4 820,00 ₽',
-      profit: '−2 184,80 ₽', profitUnit: '−64,26 ₽', margin: '−3,40 %', roi: '−5,12 %', drr: '7,50 %', redemption: '87,18 %' },
-    { id: 3, name: 'Костюм брючный женский офисный', nm: '174553902', article: 'кост-син-50',
-      sold: '41', returned: '1', sales: '98 359,00 ₽', refunds: '−2 390,00 ₽', deduction: '−44 870,12 ₽', ads: '−1 980,00 ₽',
-      profit: '36 118,76 ₽', profitUnit: '880,94 ₽', margin: '36,72 %', roi: '71,40 %', drr: '2,01 %', redemption: '97,56 %' },
+    { id: 2, name: 'Масло для массажа', nm: '325546', lead: '71', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−21 923,60 ₽', ads: '0,00 ₽', profit: '16 825,92 ₽', profitUnit: '431,43 ₽', margin: '64,35 %', roi: '210,4 %', drr: '0,00 %', redemption: '98,1 %' },
+    { id: 3, name: 'Маска для сна', nm: '116018', lead: '61', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−2 235,38 ₽', ads: '0,00 ₽', profit: '4 027,31 ₽', profitUnit: '149,16 ₽', margin: '64,82 %', roi: '188,2 %', drr: '0,00 %', redemption: '95,3 %' },
+    { id: 4, name: 'Соска-пустышка', nm: '156004', lead: '33', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−29 895,15 ₽', ads: '0,00 ₽', profit: '28 026,09 ₽', profitUnit: '1 077,93 ₽', margin: '64,29 %', roi: '171,0 %', drr: '0,00 %', redemption: '94,9 %' },
+    { id: 5, name: 'Штора для душа', nm: '702202', lead: '28', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−19 288,96 ₽', ads: '0,00 ₽', profit: '19 215,98 ₽', profitUnit: '768,64 ₽', margin: '64,40 %', roi: '180,5 %', drr: '0,00 %', redemption: '93,1 %' },
 ];
 function neg(v) { return typeof v === 'string' && v.includes('−'); }
-
-// ─── Вид «Диаграмма» ───
-const chartLabels = ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июнь'];
-const chartSeries = [
-    { name: 'Заказано', type: 'line', axis: 'right', color: '--chart-blue', values: [180, 240, 210, 300, 360, 420] },
-    { name: 'Продано', type: 'line', axis: 'right', color: '--chart-green', values: [150, 200, 180, 260, 320, 380] },
-    { name: 'Возвращено', type: 'line', axis: 'right', color: '--chart-red', values: [12, 18, 14, 22, 28, 30] },
-    { name: 'Продажи', type: 'bar', axis: 'left', color: '--chart-purple-light', values: [820000, 980000, 910000, 1100000, 1192000, 740000] },
-    { name: 'Прибыль', type: 'bar', axis: 'left', color: '--chart-pink', values: [210000, 280000, 240000, 320000, 335000, 279000] },
-];
-const sumTab = ref('month');
-const sumTabs = [{ key: 'month', label: 'Июнь 2026' }, { key: 'all', label: 'Весь период' }];
-const summary = [
-    { label: 'Продажи', value: '740 319,80 ₽', children: [
-        { label: 'Количество товаров', value: '302' },
-        { label: 'Продажи со скидкой', value: '740 319,80 ₽' },
-    ] },
-    { label: 'Возвраты', value: '−23 324,00 ₽', children: [{ label: 'Количество возвратов', value: '9' }] },
-    { label: 'Удержания', value: '−268 410,00 ₽', children: [
-        { label: 'Логистика', value: '−184 200,00 ₽' },
-        { label: 'Комиссия', value: '−84 210,00 ₽' },
-    ] },
-    { label: 'Реклама', value: '−38 540,00 ₽' },
-    { label: 'Себестоимость', value: '−210 880,00 ₽' },
-    { label: 'Валовая прибыль', value: '341 720,80 ₽' },
-    { label: 'НДС', value: '0,00 ₽' },
-    { label: 'Налог на доход', value: '−62 264,59 ₽' },
-    { label: 'Прибыль', value: '279 456,21 ₽', strong: true },
-    { label: 'Сумма выплат', value: '279 478,21 ₽' },
-    { label: 'Маржа', value: '37,7 %', bg: true },
-    { label: 'ROI', value: '88,2 %', bg: true },
-    { label: 'ДРР', value: '5,2 %', bg: true },
-    { label: 'Выкупаемость', value: '95,8 %', bg: true },
-];
 </script>
 
 <style scoped>
-.screen { padding: var(--size-24); display: flex; flex-direction: column; gap: var(--size-20); }
-.screen__periods { display: grid; grid-template-columns: repeat(auto-fit, minmax(calc(var(--size-128) * 2), 1fr)); gap: var(--size-16); }
-.screen__more { display: inline-block; padding: 1px 0; border: 0; border-bottom: 1px dashed var(--brand); background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; }
+/* ── Каркас: лого / топбар / аккаунт ── */
+.brand { font-size: var(--font-size-heading-m); font-weight: var(--font-weight-bold); color: var(--brand); }
+.topbar { display: inline-flex; align-items: center; gap: var(--size-24); }
+.topbar__page { color: var(--text-heading); }
+.topbar__ico { color: var(--text-muted); font-size: var(--font-size-heading-m); cursor: pointer; }
+.acc { display: inline-flex; align-items: center; gap: var(--size-8); }
+.acc__avatar { display: inline-flex; align-items: center; justify-content: center; width: var(--size-32); height: var(--size-32); border-radius: var(--radius-full); background: var(--brand); color: var(--white); font-size: var(--font-size-body-s); }
+.acc__body { display: inline-flex; flex-direction: column; }
+.acc__name { color: var(--text-heading); }
+.acc__store { color: var(--text-muted); }
 
-.screen__toolbar { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--size-16); flex-wrap: wrap; }
-.screen__filters { display: flex; align-items: center; gap: var(--size-8); flex-wrap: wrap; }
-.screen__tablefoot { display: flex; align-items: center; justify-content: space-between; gap: var(--size-16); flex-wrap: wrap; }
+.screen { padding: var(--size-24); display: flex; flex-direction: column; gap: var(--size-16); }
 
-/* Кнопка «→» в колонке Инфо. */
-.prod__more { border: 0; background: transparent; color: var(--text-muted); font-size: var(--font-size-title-m); line-height: 1; cursor: pointer; }
-.prod__more:hover { color: var(--brand); }
-.screen__pos { color: var(--accent-positive); }
-.screen__neg { color: var(--status-danger); }
+.hint-thumb { display: block; width: 96px; height: 56px; border-radius: var(--radius-sm); background: var(--brand-gradient); }
 
-.screen__chart { display: grid; grid-template-columns: 1fr; gap: var(--size-16); }
-@media (min-width: 992px) { .screen__chart { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); align-items: start; } }
-.screen__sumlist { margin-top: var(--size-12); }
+/* Верхний тулбар */
+.bar { display: flex; align-items: center; gap: var(--size-8); }
+.bar__search { flex: 1 1 auto; max-width: 540px; }
+.bar__date { width: var(--control-height-md); height: var(--control-height-md); border: 0; border-radius: var(--radius-sm); background: var(--brand); color: var(--white); cursor: pointer; margin-left: auto; }
+
+.periods { display: grid; grid-template-columns: repeat(auto-fit, minmax(calc(var(--size-128) * 2), 1fr)); gap: var(--size-16); }
+.more { display: inline-block; padding: 1px 0; border: 0; border-bottom: 1px dashed var(--brand); background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; }
+
+.chart { display: grid; grid-template-columns: 1fr; gap: var(--size-16); }
+@media (min-width: 992px) { .chart { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); align-items: start; } }
+.chart__sumlist { margin-top: var(--size-12); }
+
+/* Тулбар таблицы */
+.tbar { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--size-16); flex-wrap: wrap; }
+.tbar__right { display: flex; align-items: center; gap: var(--size-16); flex-wrap: wrap; }
+.tbar__link { border: 0; background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; display: inline-flex; align-items: center; gap: var(--size-4); }
+
+.more-btn { border: 0; background: transparent; color: var(--text-muted); font-size: var(--font-size-title-m); line-height: 1; cursor: pointer; }
+.more-btn:hover { color: var(--brand); }
+.pos { color: var(--accent-positive); }
+.neg { color: var(--status-danger); }
+.tfoot { display: flex; justify-content: center; }
 </style>

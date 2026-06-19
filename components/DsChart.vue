@@ -260,11 +260,13 @@ const linePaths = computed(() =>
     border-radius: var(--radius-sm);
     background: var(--mark-color);
 }
-/* Линейная серия — метка в виде черты. */
+/* Линейная серия — метка в виде полого кружка (как точки на линиях). */
 .ds-chart__legend-mark--line {
-    width: var(--size-16);
-    height: var(--size-4);
+    width: var(--size-12);
+    height: var(--size-12);
     border-radius: var(--radius-full);
+    background: var(--surface-default);
+    border: 2px solid var(--mark-color);
 }
 .ds-chart__legend-label { color: var(--text-default); }
 

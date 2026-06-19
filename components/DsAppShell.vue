@@ -45,7 +45,7 @@
                     :aria-current="isActive(item) ? 'page' : undefined"
                     @click="onItemClick(item, $event)"
                 >
-                    <span class="ds-app-shell__nav-icon" aria-hidden="true">{{ item.icon }}</span>
+                    <span class="ds-app-shell__nav-icon" :class="iconClass(item.icon)" aria-hidden="true">{{ iconGlyph(item.icon) }}</span>
                     <span class="t-caption ds-app-shell__nav-label">{{ item.label }}</span>
                 </a>
             </nav>
@@ -96,6 +96,14 @@ const props = defineProps({
         default: '',
     },
 });
+
+// icon может быть классом иконочного шрифта (.fm-*) или текстовым глифом/эмодзи.
+function iconClass(icon) {
+    return typeof icon === 'string' && icon.startsWith('fm-') ? icon : '';
+}
+function iconGlyph(icon) {
+    return iconClass(icon) ? '' : icon;
+}
 
 const emit = defineEmits(['select']);
 
