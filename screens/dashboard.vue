@@ -54,7 +54,7 @@
                 <DsTabs v-model="metric" :tabs="metricTabs" />
                 <div class="tbar__right">
                     <button type="button" class="tbar__link fm-download"> Скачать таблицу (.xls)</button>
-                    <DsSelect v-model="group" :options="groups" placeholder="Группировать по" :show-footer="false" />
+                    <DsSelect v-model="group" :options="groups" placeholder="Группировать по" :show-footer="false" class="tbar__group" />
                 </div>
             </div>
 
@@ -239,7 +239,8 @@ function neg(v) { return typeof v === 'string' && v.includes('−'); }
 .acc__name { color: var(--text-heading); }
 .acc__store { color: var(--text-muted); }
 
-.screen { padding: var(--size-24); display: flex; flex-direction: column; gap: var(--size-16); }
+/* Без своего паддинга — отступ страницы задаёт AppShell content. */
+.screen { display: flex; flex-direction: column; gap: var(--size-16); }
 
 .hint-thumb { display: block; width: 96px; height: 56px; border-radius: var(--radius-sm); background: var(--brand-gradient); }
 
@@ -259,6 +260,7 @@ function neg(v) { return typeof v === 'string' && v.includes('−'); }
 .tbar { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--size-16); flex-wrap: wrap; }
 .tbar__right { display: flex; align-items: center; gap: var(--size-16); flex-wrap: wrap; }
 .tbar__link { border: 0; background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; display: inline-flex; align-items: center; gap: var(--size-4); }
+.tbar__group { width: 220px; max-width: 100%; }
 
 .more-btn { border: 0; background: transparent; color: var(--text-muted); font-size: var(--font-size-title-m); line-height: 1; cursor: pointer; }
 .more-btn:hover { color: var(--brand); }

@@ -694,7 +694,9 @@ defineExpose({ openDetail });
 /* Видны только приоритетные колонки (mobileColumns) + кнопка → «Подробнее». */
 @include respond-below(md) {
     .ds-table-wrap--compact {
-        overflow-x: hidden;
+        /* Если приоритетные колонки всё же не влезают — горизонтальный скролл,
+           но без посимвольного переноса чисел. */
+        overflow-x: auto;
 
         /* Прячем непрриоритетные колонки. */
         .ds-table__cell--mobile-hidden { display: none; }
@@ -703,26 +705,19 @@ defineExpose({ openDetail });
         .ds-table__th--detail,
         .ds-table__td--detail { display: table-cell; }
 
-        /* Таблица занимает 100% ширины и не переполняет экран: фиксированная
-           раскладка распределяет место по видимым колонкам (inline width с
-           десктопа на мобайле не подставляется — см. widthStyle()). */
-        .ds-table {
-            width: 100%;
-            table-layout: fixed;
-        }
+        /* Авто-раскладка: колонки по контенту, имя забирает остаток. */
+        .ds-table { width: 100%; }
 
-        /* Числовые приоритетные колонки — узкие, значения вправо. */
-        .ds-table__th--numeric { width: var(--size-64); }
-        .ds-table__td--numeric { white-space: normal; overflow-wrap: anywhere; }
+        /* Числовые колонки — значения в ОДНУ строку (не рвать «6 928,46 ₽»). */
+        .ds-table__th--numeric { width: auto; }
+        .ds-table__td--numeric { white-space: nowrap; }
 
-        /* Колонка «Товары» (лид) — гибкая, занимает оставшееся место,
-           контент переносится (name/id/price), длинный id ломается. */
+        /* Колонка «Товары» (лид) — гибкая, занимает оставшееся место, имя переносится. */
         .ds-table__th:first-child,
         .ds-table__td:first-child { width: auto; }
         .ds-table__td:first-child {
             white-space: normal;
-            overflow-wrap: anywhere;
-            word-break: break-word;
+            overflow-wrap: break-word;
         }
     }
 }

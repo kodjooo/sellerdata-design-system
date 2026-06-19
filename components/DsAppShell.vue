@@ -280,9 +280,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEsc));
     display: flex;
     flex-direction: column;
     gap: var(--size-16);
-    padding: var(--size-32);
+    padding: var(--size-16);
 
-    @include respond-to(md) { padding: var(--size-40); }
-    @include respond-to(lg) { padding: var(--size-48); }
+    @include respond-to(md) { padding: var(--size-24); }
+    @include respond-to(lg) { padding: var(--size-40); }
 }
 </style>
