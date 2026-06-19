@@ -541,8 +541,9 @@ defineExpose({ openDetail });
 /* Дочерние строки раскрытия — подложка subtle. */
 .ds-table__row--child > .ds-table__td { background: var(--surface-subtle); }
 
-/* Строка-группа (агрегат при группировке) — выделена жирным. */
-.ds-table__row--group > .ds-table__td { font-weight: var(--font-weight-semibold); color: var(--text-heading); }
+/* Строка-группа (агрегат при группировке) — как обычная строка (реал: вес 400),
+   отличается лишь раскрытием/именем группы. Класс — семантический хук без эмфазы. */
+.ds-table__row--group > .ds-table__td { color: var(--text-heading); }
 
 /* ─── Лид-ячейка с триггером раскрытия ────────────────────────── */
 .ds-table__lead {
