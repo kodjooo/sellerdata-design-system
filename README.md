@@ -56,8 +56,7 @@ Claude Design умеет импортировать дизайн-систему 
 
 ## Бренд и шрифты
 
-- `brand/` — логотип Sellerdata: `logo.svg` (основной, шапка ЛК), `logo-auth.svg` (auth-экраны),
-  `logo-basic.svg`, `logo_blue.png`. Использовать вместо плейсхолдера «SD».
+- `brand/` — логотип Sellerdata: `logo.svg` и `logo-basic.svg` — чистый вектор (11 path, бренд #4154F1, основной); `logo_blue.png` — растровый фоллбэк. Использовать вместо плейсхолдера «SD». (Растровые SVG-обёртки удалены.)
 - `fonts/OpenSans-*.{woff2,woff}` — самохостируемый Open Sans (Regular 400 / Medium 500 /
   SemiBold 600 / Bold 700). `scss/_type.scss` уже подключает их через `@font-face` (путь
   `../fonts/OpenSans-*`) — внешний CDN (Google Fonts) не нужен.
