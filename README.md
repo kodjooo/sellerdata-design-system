@@ -53,3 +53,12 @@ Claude Design умеет импортировать дизайн-систему 
 Источник — кодовая база приложения Sellerdata (живой каталог — страница `/design-system`).
 Этот репозиторий — экспорт. При изменении токенов/компонентов в приложении обновлять файлы здесь
 (скопировать `_variables.scss`, `tokens.js`, `Components/Ds/*`, перегенерировать `tokens.json`).
+
+## Бренд и шрифты
+
+- `brand/` — логотип Sellerdata: `logo.svg` (основной, шапка ЛК), `logo-auth.svg` (auth-экраны),
+  `logo-basic.svg`, `logo_blue.png`. Использовать вместо плейсхолдера «SD».
+- `fonts/OpenSans-*.{woff2,woff}` — самохостируемый Open Sans (Regular 400 / Medium 500 /
+  SemiBold 600 / Bold 700). `scss/_type.scss` уже подключает их через `@font-face` (путь
+  `../fonts/OpenSans-*`) — внешний CDN (Google Fonts) не нужен.
+- `fonts/sellerboard.*` — иконочный шрифт `.fm-*` (см. `scss/_icon-font.scss`).
