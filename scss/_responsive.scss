@@ -1,0 +1,53 @@
+// ============================================================
+//  Responsive — брейкпоинты и mixin'ы (единый источник для @media)
+// ============================================================
+//  $bp-* — SCSS-переменные (var() не работает внутри @media, поэтому
+//  брейкпоинты живут как SCSS, а не как CSS-токены).
+//  Подход mobile-first: базовые стили = мобайл, respond-to() расширяет вверх.
+//
+//  Использование в scoped-стилях .vue:
+//    <style lang="scss" scoped>
+//    @use 'responsive' as *;
+//    .toolbar { flex-direction: column;
+//      @include respond-to(md) { flex-direction: row; }
+//    }
+//    </style>
+// ============================================================
+
+@use 'sass:map';
+
+$bp-sm:  576px;   // телефон → планшет
+$bp-md:  768px;   // планшет (главный брейк)
+$bp-lg:  992px;   // десктоп / показ сайдбара
+$bp-xl:  1200px;  // широкий десктоп
+$bp-xxl: 1400px;  // очень широкий (опционально)
+
+$breakpoints: (
+    sm:  $bp-sm,
+    md:  $bp-md,
+    lg:  $bp-lg,
+    xl:  $bp-xl,
+    xxl: $bp-xxl,
+);
+
+// Mobile-first: применяет @content начиная с ширины брейкпоинта и выше.
+@mixin respond-to($name) {
+    $bp: map.get($breakpoints, $name);
+    @if $bp == null {
+        @error "respond-to: неизвестный брейкпоинт '#{$name}'. Доступны: #{map.keys($breakpoints)}";
+    }
+    @media (min-width: $bp) {
+        @content;
+    }
+}
+
+// Обратный (desktop-first): применяет @content до брейкпоинта (исключая его).
+@mixin respond-below($name) {
+    $bp: map.get($breakpoints, $name);
+    @if $bp == null {
+        @error "respond-below: неизвестный брейкпоинт '#{$name}'. Доступны: #{map.keys($breakpoints)}";
+    }
+    @media (max-width: ($bp - 0.02px)) {
+        @content;
+    }
+}

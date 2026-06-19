@@ -1,0 +1,322 @@
+// ============================================================
+//  Sellerdata Design System — single source of truth
+// ============================================================
+//  Канонический источник дизайн-токенов — CSS-переменные в :root ниже.
+//  Двухуровневая система:
+//    • Tier 1 — PRIMITIVES (--blue-600, --gray-900) — хроматические токены
+//    • Tier 2 — SEMANTIC   (--brand, --text-default) — семантические алиасы
+//
+//  Новый код ОБЯЗАН использовать var(--token-name).
+//  Legacy SCSS-переменные (внизу файла) сохранены только для обратной
+//  совместимости с существующими классами и постепенно заменяются.
+// ============================================================
+
+// $base-font-size нужен для rem() из _functions.scss (импорт ниже).
+$base-font-size: 16px;
+
+@import 'functions';
+
+:root {
+    // ── Typography ─────────────────────────────────────────
+    // Open Sans — основной. Богатый sans-fallback нужен для глифов, которых нет в
+    // подключённом Open Sans (напр. знак рубля ₽ U+20BD): без него браузер брал
+    // системный serif. Системные sans (SF/Segoe/Roboto/Arial) рисуют ₽ без засечек.
+    --font-family-sans:      'Open Sans', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    --font-weight-regular:   400;
+    --font-weight-medium:    500;
+    --font-weight-semibold:  600;
+    --font-weight-bold:      700;
+
+    --line-height-tight:     1.2;
+    --line-height-normal:    1.4;
+    --line-height-relaxed:   1.5;
+
+    // Шкала: 6 размеров. Якоря — 16px (база/body) и 13px (компакт/label).
+    //   36  Display       — hero, маркетинг, success/empty states
+    //   24  Heading/L     — заголовки страниц и модалок
+    //   20  Heading/M     — заголовки карточек и подсекций
+    //   16  Title + Body  — база: основной текст, формы, заголовки виджетов
+    //                       (Title=600, Body=400; одна база, два веса)
+    //   13  Label + Body/S — компактный текст, лейблы, бейджи
+    //                       (Label=600, Body/S=400)
+    //   11  Caption       — каунтеры, ультра-мелкие подписи
+    --font-size-display-xl:  #{rem(36)};
+    --font-size-heading-l:   #{rem(24)};
+    --font-size-heading-m:   #{rem(20)};
+    --font-size-title-m:     #{rem(16)};
+    --font-size-body-l:      #{rem(16)};
+    --font-size-body-s:      #{rem(13)};
+    --font-size-label-m:     #{rem(13)};
+    --font-size-caption:     #{rem(11)};
+
+    // ── Size scale ────────────────────────────────────────
+    // Универсальная шкала размеров: padding, margin, gap, width, height,
+    // icon-size, avatar-size и т.д. Все значения кратны 2px.
+    // Имя = значение в px (--size-16 = 16px).
+    //
+    // Шаги меньше и плотнее в малой зоне (где разница в 2px заметна),
+    // крупнее в большой зоне (где разница в 8px ещё читается):
+    //   2-12:   шаг 2  — fine/inline (gap иконок, padding бейджей, разделители)
+    //   12-24:  шаг 4  — controls (gap внутри кнопок, padding карточек, иконки 16-24)
+    //   24-48:  шаг 8  — components (avatar-средний, control-height 32/40/48, section gap)
+    //   48-128: шаг 16 — layout (модалки, аватары крупные, иллюстрации)
+    --size-2:                #{rem(2)};
+    --size-4:                #{rem(4)};
+    --size-6:                #{rem(6)};
+    --size-8:                #{rem(8)};
+    --size-10:               #{rem(10)};
+    --size-12:               #{rem(12)};
+    --size-16:               #{rem(16)};
+    --size-20:               #{rem(20)};
+    --size-24:               #{rem(24)};
+    --size-32:               #{rem(32)};
+    --size-40:               #{rem(40)};
+    --size-48:               #{rem(48)};
+    --size-64:               #{rem(64)};
+    --size-80:               #{rem(80)};
+    --size-96:               #{rem(96)};
+    --size-128:              #{rem(128)};
+
+    // ── Border radius ──────────────────────────────────────
+    // Минимальная шкала из 4 ступеней. Все скаляры кратны 4px.
+    // `full` — semantic «полностью скруглить» (pills, бейджи, круги при w=h).
+    // Для острых углов используйте сырой `0`, отдельного токена нет.
+    --radius-sm:             #{rem(4)};
+    --radius-md:             #{rem(8)};   /* ⭐ default — карточки, кнопки, модалки */
+    --radius-lg:             #{rem(12)};
+    --radius-full:           9999px;
+
+    // ── PRIMITIVES (Tier 1) — только цвета вне графиков ────
+    --white:                 #FFFFFF;
+    --black:                 #000000;
+
+    --gray-50:               #F9F9F9;
+    --gray-100:              #F6F6F6;
+    --gray-200:              #F0F0F0;
+    --gray-300:              #E4E5E7;
+    --gray-400:              #DDDDDD;
+    --gray-500:              #BDBDBD;
+    --gray-600:              #999999;
+    --gray-800:              #555555;
+    --gray-900:              #232323;
+
+    --blue-300:              #51B1FA;
+    --blue-600:              #4154F1;
+    --blue-700:              #3549EE;
+
+    --red-50:                #FEF3F2;
+    --red-300:               #F47171;
+    --red-500:               #EE3131;
+    --red-700:               #B22626;
+
+    --green-50:              #F0F7E9;
+    --green-600:             #54A631;
+
+    --teal-500:              #17B787;
+
+    --orange-500:            #F79009;
+    --amber-50:              #FEF9EC;
+    --amber-200:             #FEDF89;
+    --amber-300:             #EBAA5B;
+    --amber-800:             #93370D;
+
+    --yellow-500:            #E9C02E;
+
+    --purple-500:            #7A5AF8;
+
+    // ── Chart palette — отдельная группа ────────────────────
+    // Цвета сохранены точно как в текущих графиках.
+    --chart-blue:            #4E91FF;
+    --chart-green:           #51B578;
+    --chart-red:             #F55244;
+    --chart-purple-light:    #99ACF6;
+    --chart-pink:            #EF93A0;
+
+    // ── Summary card palette — отдельная группа ──────────────
+    // Цвета шапок summary-карточек (.block_item_head) на дашборде
+    // и складе. Подобраны вручную — НЕ системная шкала, не путать
+    // с blue/gray. Каждая секция берёт подмножество по смыслу.
+    --summary-periwinkle:    #777BFE;
+    --summary-blue:          #6778F4;
+    --summary-muted:         #757DC4;
+    --summary-indigo:        #525DB5;
+    --summary-indigo-deep:   #4451B1;
+    --summary-navy:          #15259D;
+
+
+    // ── SEMANTIC (Tier 2) ──────────────────────────────────
+    // Brand
+    --brand:                 var(--blue-600);
+    --brand-hover:            var(--blue-700);
+    --brand-gradient:        linear-gradient(92.5deg, var(--blue-600) 0.41%, var(--blue-300) 100%);
+
+    // Accent (положительный зелёный, не CTA)
+    --accent-positive:       var(--green-600);
+    --accent-positive-bg:    var(--green-50);
+
+    // Status
+    --status-success:        var(--teal-500);
+    --status-alert:          var(--yellow-500);   // жёлтые иконки: рейтинг, info, attention
+    --status-warning:        var(--orange-500);
+    --status-danger:         var(--red-500);
+    --status-danger-strong:  var(--red-700);
+    --status-danger-bg:      var(--red-50);
+    --status-error:          var(--red-300);      // мягкая ошибка (бордер инпута)
+    --status-attention:      var(--purple-500);   // фиолетовый, для статус-плашек
+    --status-default:        var(--gray-600);
+
+    // Notice (peach — кэп-блоки и промо)
+    --notice-bg:             var(--amber-50);
+    --notice-border:         var(--amber-200);
+    --notice-accent:         var(--amber-300);
+    --notice-text-strong:    var(--amber-800);
+
+    // Text
+    --text-strong:           var(--black);
+    --text-heading:          var(--gray-900);
+    --text-default:          var(--gray-800);
+    --text-muted:            var(--gray-600);
+    --text-placeholder:      var(--gray-500);
+    --text-disabled:         var(--gray-500);
+    --text-on-brand:         var(--white);
+
+    // Surface
+    --surface-default:       var(--white);
+    --surface-subtle:        var(--gray-50);
+    --surface-muted:         var(--gray-100);
+    --surface-disabled:      var(--gray-300);
+    --surface-scrollbar-track: var(--gray-100);
+    --surface-scrollbar-thumb: var(--gray-500);
+
+    // Border
+    --border-default:        var(--gray-200);
+    --border-input:          var(--gray-400);
+    --border-strong:         var(--gray-500);
+
+    // Shadows (используют системные цвета через rgb(from ...))
+    --shadow-card:           0 1px 2px      rgb(from var(--gray-900) r g b / 0.12);
+    --shadow-button:         0 4px 14px     rgb(from var(--gray-900) r g b / 0.06);
+    --shadow-aside:          4px 0 16px 2px rgb(from var(--gray-900) r g b / 0.03);
+    --shadow-dropdown:       0 4px 20px     rgb(from var(--gray-900) r g b / 0.20);
+    --shadow-input-focus:    0 0 0 4px      rgb(from var(--brand)    r g b / 0.12);
+    // Тень модалок/поповеров — свод повторяющейся rgba(24,39,75,.12) (≈36 вхождений)
+    --shadow-overlay:        0 4px 12px     rgb(from var(--gray-900) r g b / 0.12);
+    // Danger-аналог фокус-обводки (для инпутов с ошибкой)
+    --shadow-input-focus-danger: 0 0 0 4px  rgb(from var(--status-danger) r g b / 0.12);
+
+    // ── Notice: дополнительные семантические варианты ──────
+    --notice-success-bg:     rgb(from var(--green-600) r g b / 0.12);
+    --notice-success-text:   var(--green-600);
+    --notice-info-bg:        rgb(from var(--blue-300) r g b / 0.12);
+    --notice-info-border:    var(--blue-300);
+
+    // ── Error-семантика контролов (формы/инпуты) ───────────
+    --border-error:          var(--red-300);
+    --text-error:            var(--red-500);
+
+    // ── Opacity ────────────────────────────────────────────
+    // Семантическая шкала непрозрачности. Своды из аудита: .55→.4, .50→.5, .2→.3.
+    --opacity-full:          1;       // непрозрачно (start/end transition)
+    --opacity-hover:         0.7;     // hover-затемнение
+    --opacity-muted:         0.5;     // приглушённый контент
+    --opacity-disabled:      0.4;     // disabled-элементы
+    --opacity-faint:         0.3;     // очень бледный
+    --opacity-hidden:        0;       // скрыто (start/end transition)
+
+    // ── Motion ─────────────────────────────────────────────
+    // Длительности и easing. Своды: .12s→fast, .2s→base, .3s→slow.
+    --transition-fast:       150ms;   // мелкие контролы: hover/focus
+    --transition-base:       200ms;   // стандарт: кнопки, инпуты, табы
+    --transition-slow:       300ms;   // панели, модалки, аккордеоны
+    --ease-standard:         ease-in-out;  // дефолтный easing (доминирует)
+    --ease-emphasized:       ease;         // альтернативный
+    --ease-linear:           linear;       // спиннеры, прогресс
+    --duration-spin:         1.2s;    // спиннеры (общий @keyframes spin)
+    --duration-skeleton:     2s;      // skeleton-shimmer
+
+    // ── Z-index (шкала слоёв) ──────────────────────────────
+    // Запрет на сырые числа. Замена зоопарка 1…100000 и bootstrap-слоёв.
+    --z-below:               -1;      // под потоком (декор, ::before)
+    --z-base:                0;       // базовый поток
+    --z-raised:              1;       // приподнятый элемент
+    --z-raised-2:            2;       // второй уровень
+    --z-sticky:              10;      // sticky-шапки/колонки таблиц
+    --z-dropdown:            1000;    // дропдауны/селекты
+    --z-fixed:               1030;    // фикс. шапки/сайдбары
+    --z-overlay:             1040;    // backdrop модалок
+    --z-modal:               1050;    // модалки
+    --z-popover:             1060;    // поповеры
+    --z-toast:               1080;    // тосты
+    --z-tooltip:             1090;    // тултипы
+    --z-max:                 2147483647; // крайний случай
+
+    // ── Control-height (высота интерактивных контролов) ────
+    // Закрывает разнобой 38/42px. Ссылается на size-шкалу.
+    --control-height-sm:     var(--size-32);  // 32 — compact
+    --control-height-md:     var(--size-40);  // 40 — default
+    --control-height-lg:     var(--size-48);  // 48 — large CTA / touch-target
+
+    // ── Прочее ─────────────────────────────────────────────
+    --border-width-accent:   3px;     // толщина акцент-полосы (активный таб и т.п.)
+}
+
+// Брейкпоинты ($bp-*) и mixin respond-to() вынесены в `_responsive.scss`
+// (SCSS-переменные для @media; подключать через `@use 'responsive' as *`).
+
+
+// ============================================================
+// ⚠️  LEGACY — DEPRECATED ⚠️
+// ============================================================
+//  SCSS-переменные ниже существуют ТОЛЬКО для обратной совместимости
+//  со старыми классами. Это НЕ источник истины.
+//
+//  🚫 НЕ использовать в новом коде.
+//  🚫 НЕ добавлять новые переменные сюда.
+//  ✅ Использовать CSS-переменные var(--token-name) из :root выше.
+//
+//  Заменять старые $var → var(--*) постепенно при касании файла.
+// ============================================================
+
+// Цвета — литералы для совместимости с rgba(), lighten() и т.д.
+$white:            #fff;
+$black:            #000;
+$blue:             #4154f1;
+$blue_hover:       #3549ee;
+$dark:             #555;
+$dark_grey:        #999;
+$light_grey:       #F9F9F9;
+$title-color:      #232323;
+$border_color:     #F0F0F0;
+$grey-100:         #F6F6F6;
+$grey-200:         #E4E5E7;
+$grey-300:         #F7F7F7;
+$grey-400:         #B9BEC6;
+$primary-300:      #54A631;
+$primary-200:      #6EBF4B;
+$primary-100:      #F0F7E9;
+$primary-50:       #F0F9ED;
+$danger:           #EE3131;
+$success:          #17B787;
+$warning:          #F79009;
+$peach-800:        #93370D;
+$peach-300:        #EBAA5B;
+$peach-200:        #FEDF89;
+$peach-100:        #FEF9EC;
+$error-300:        #EB5757;
+$error-100:        #FDF1F1;
+$info:             #EE4949;
+$accent:           #52B4FB;
+$inputPlaceholder: #BDBDBD;
+
+$white_06:         rgba(255, 255, 255, 0.6);
+$black_01:         rgba(0, 0, 0, 0.1);
+$black_02:         rgba(0, 0, 0, 0.2);
+$black_04:         rgba(0, 0, 0, 0.4);
+$dark_01:          rgba(85, 85, 85, 0.1);
+$dark_02:          rgba(85, 85, 85, 0.2);
+$dark_04:          rgba(85, 85, 85, 0.4);
+
+// Удалены (были не использованы):
+//   $secondary-300 (#FF784F)
+//   $wish (#F87650)

@@ -1,0 +1,116 @@
+// ============================================================
+//  Подключение шрифтов и утилитарные классы типографики
+// ============================================================
+//  Веса: 400 (Regular), 600 (SemiBold), 700 (Bold).
+//  Вес 500 (Medium) удалён в рефакторинге дизайн-системы.
+// ============================================================
+
+@font-face {
+    font-family: 'Open Sans';
+    src: url('../fonts/OpenSans-SemiBold.woff2') format('woff2'),
+    url('../fonts/OpenSans-SemiBold.woff') format('woff');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    src: url('../fonts/OpenSans-Regular.woff2') format('woff2'),
+    url('../fonts/OpenSans-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Open Sans';
+    src: url('../fonts/OpenSans-Bold.woff2') format('woff2'),
+    url('../fonts/OpenSans-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face{
+    font-family:'text-security-disc';
+    font-display: block;
+    src:url('../fonts/text-security-disc-compat.eot'),
+    url('../fonts/text-security-disc-compat.eot?#iefix') format('embedded-opentype'),
+    url('../fonts/text-security-disc.woff2') format('woff2'),
+    url('../fonts/text-security-disc-compat.ttf') format('truetype')
+}
+
+
+// ============================================================
+//  Typography utility classes
+// ============================================================
+//  Используются в новом коде напрямую: <h1 class="t-display-xl">…</h1>
+//  Существующие классы (.page_title, .modal-header h2 и т.д.) НЕ трогаем —
+//  они продолжают работать через legacy SCSS-переменные.
+//  Имена соответствуют Figma-стилям 1:1 (Display/XL → .t-display-xl).
+// ============================================================
+
+.t-display-xl {
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-display-xl);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+}
+
+.t-heading-l {
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-heading-l);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+}
+
+.t-heading-m {
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-heading-m);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+}
+
+.t-title-m {
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-title-m);
+    font-weight: var(--font-weight-bold);
+    line-height: var(--line-height-tight);
+}
+
+.t-body-l {
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-body-l);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--line-height-relaxed);
+}
+
+.t-body-s {
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-body-s);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--line-height-relaxed);
+}
+
+.t-label-m {
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-label-m);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+}
+
+.t-caption {
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-caption);
+    font-weight: var(--font-weight-regular);
+    line-height: var(--line-height-tight);
+}
+
+.t-button-cta {
+    font-family: var(--font-family-sans);
+    font-size: var(--font-size-title-m);
+    font-weight: var(--font-weight-semibold);
+    line-height: var(--line-height-tight);
+    text-transform: uppercase;
+}
