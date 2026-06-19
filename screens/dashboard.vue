@@ -11,13 +11,7 @@
         <template #actions>
             <span class="fm-help-circle topbar__ico" aria-hidden="true"></span>
             <span class="fm-bell topbar__ico" aria-hidden="true"></span>
-            <span class="acc">
-                <span class="acc__avatar" aria-hidden="true">Д</span>
-                <span class="acc__body">
-                    <span class="t-label-m acc__name">Демо аккаунт</span>
-                    <span class="t-caption acc__store">Дополнительный магазин</span>
-                </span>
-            </span>
+            <DsAccountBadge name="Демо аккаунт" store="Дополнительный магазин" />
         </template>
 
         <div class="screen">
@@ -106,12 +100,14 @@ import DsPagination from '@/Components/Ds/DsPagination.vue';
 import DsProductCell from '@/Components/Ds/DsProductCell.vue';
 import DsInfoList from '@/Components/Ds/DsInfoList.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
+import DsAccountBadge from '@/Components/Ds/DsAccountBadge.vue';
 
+// Иконки сверены с реальным сайдбаром (Authenticated.vue).
 const nav = [
-    { key: 'dashboard', label: 'Дэшборд', icon: 'fm-grid', href: '#' },
-    { key: 'products', label: 'Товары', icon: 'fm-box', href: '#' },
+    { key: 'dashboard', label: 'Дэшборд', icon: 'fm-layout', href: '#' },
+    { key: 'products', label: 'Товары', icon: 'fm-clipboard', href: '#' },
     { key: 'expenses', label: 'Расходы', icon: 'fm-credit-card', href: '#' },
-    { key: 'redeems', label: 'Самовыкупы', icon: 'fm-refresh-cw', href: '#' },
+    { key: 'redeems', label: 'Самовыкупы', icon: 'fm-rotate-ccw', href: '#' },
     { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: '#' },
     { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: '#' },
     { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: '#' },
@@ -119,7 +115,7 @@ const nav = [
 
 const hintOpen = ref(true);
 const view = ref('chart');
-const views = [{ key: 'grid', label: 'Плитки' }, { key: 'chart', label: 'Диаграмма' }];
+const views = [{ key: 'grid', label: 'Плитки', icon: 'fm-grid' }, { key: 'chart', label: 'Диаграмма', icon: 'fm-trending-up' }];
 const search = ref(null);
 
 // ── Период-карточки (реальные числа account 4) ──
@@ -233,11 +229,6 @@ function neg(v) { return typeof v === 'string' && v.includes('−'); }
 .topbar { display: inline-flex; align-items: center; gap: var(--size-24); }
 .topbar__page { color: var(--text-heading); }
 .topbar__ico { color: var(--text-muted); font-size: var(--font-size-heading-m); cursor: pointer; }
-.acc { display: inline-flex; align-items: center; gap: var(--size-8); }
-.acc__avatar { display: inline-flex; align-items: center; justify-content: center; width: var(--size-32); height: var(--size-32); border-radius: var(--radius-full); background: var(--brand); color: var(--white); font-size: var(--font-size-body-s); }
-.acc__body { display: inline-flex; flex-direction: column; }
-.acc__name { color: var(--text-heading); }
-.acc__store { color: var(--text-muted); }
 
 /* Без своего паддинга — отступ страницы задаёт AppShell content. */
 .screen { display: flex; flex-direction: column; gap: var(--size-16); }
