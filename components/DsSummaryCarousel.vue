@@ -48,11 +48,17 @@
                 class="ds-summary-carousel__card"
                 :class="{ 'is-active': i === activeIndex }"
                 :title="item.title"
+                :subtitle="item.subtitle || ''"
                 :gradient="item.gradient"
                 :icon="item.icon || ''"
                 :metrics="item.metrics"
                 :columns="cardColumns"
-            />
+                :featured-first="featuredFirst"
+            >
+                <template v-if="item.footerText" #footer>
+                    <button type="button" class="ds-summary-carousel__more">{{ item.footerText }}</button>
+                </template>
+            </DsSummaryCard>
         </div>
     </section>
 </template>
@@ -71,6 +77,11 @@ defineProps({
     cardColumns: {
         type: [Number, String],
         default: 3,
+    },
+    // Эмфаза первой метрики (как в период-карточках дашборда).
+    featuredFirst: {
+        type: Boolean,
+        default: false,
     },
 });
 
@@ -133,6 +144,18 @@ const activeIndex = ref(0);
 .ds-summary-carousel__tab.is-active::after { opacity: var(--opacity-full); }
 
 /* ─── Лента карточек ──────────────────────────────────────────── */
+/* Кнопка «Больше» в футере карточки-периода (как в реале). */
+.ds-summary-carousel__more {
+    display: inline-block;
+    padding: 1px 0;
+    border: 0;
+    border-bottom: 1px dashed var(--brand);
+    background: transparent;
+    color: var(--brand);
+    font-size: var(--font-size-body-s);
+    cursor: pointer;
+}
+
 /* База = мобайл: показываем ТОЛЬКО активную карточку (вкладки/свайпер). */
 .ds-summary-carousel__track {
     display: grid;

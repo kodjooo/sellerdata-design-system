@@ -38,15 +38,7 @@
             </div>
 
             <!-- ВЕРХНИЙ БЛОК — переключается вкладками Плитки/Диаграмма -->
-            <div v-if="view === 'grid'" class="periods">
-                <DsSummaryCard
-                    v-for="p in periods" :key="p.title"
-                    :title="p.title" :subtitle="p.subtitle" :gradient="p.gradient" :icon="p.icon"
-                    featured-first :metrics="p.metrics"
-                >
-                    <template #footer><button type="button" class="more">Больше</button></template>
-                </DsSummaryCard>
-            </div>
+            <DsSummaryCarousel v-if="view === 'grid'" :items="periods" featured-first :card-columns="2" />
             <div v-else class="chart">
                 <DsCard radius="lg" class="chart__graph">
                     <DsChart :labels="chartLabels" :series="chartSeries" />
@@ -67,9 +59,13 @@
             </div>
 
             <DsCard radius="md" padding="--size-2">
-                <DsTable :columns="cols" :rows="rows" row-key="id" expandable default-sort-key="profit">
+                <DsTable
+                    :columns="cols" :rows="rows" row-key="id" expandable default-sort-key="profit"
+                    mobile-mode="compact" :mobile-columns="['name', 'lead', 'profit', 'info']" :mobile-detail="false"
+                    group-key="isGroup"
+                >
                     <template #cell-name="{ row }">
-                        <span v-if="row.isGroup" class="grp">{{ row.name }}</span>
+                        <span v-if="row.isGroup">{{ row.name }}</span>
                         <DsProductCell
                             v-else
                             :name="row.name"
@@ -99,6 +95,7 @@ import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import DsAppShell from '@/Components/Ds/DsAppShell.vue';
 import DsSummaryCard from '@/Components/Ds/DsSummaryCard.vue';
+import DsSummaryCarousel from '@/Components/Ds/DsSummaryCarousel.vue';
 import DsTabs from '@/Components/Ds/DsTabs.vue';
 import DsCard from '@/Components/Ds/DsCard.vue';
 import DsChart from '@/Components/Ds/DsChart.vue';
@@ -127,10 +124,10 @@ const search = ref(null);
 
 // ── Период-карточки (реальные числа account 4) ──
 const periods = [
-    { title: 'Сегодня', subtitle: '11.06.2026', gradient: 'blue', metrics: pm('176 196,45 ₽ / 89 шт.', '173 750,93 ₽ / 110 шт.', '−3 637,89 ₽ / 1 шт.', '122 928,35 ₽', '88 038,35 ₽') },
-    { title: 'Вчера', subtitle: '10.06.2026', gradient: 'muted', metrics: pm('173 322,34 ₽ / 84 шт.', '215 723,77 ₽ / 104 шт.', '−2 541,00 ₽ / 2 шт.', '101 676,38 ₽', '84 747,10 ₽') },
-    { title: 'Текущий месяц', subtitle: '01.06.2026 до 11.06.2026', gradient: 'indigo-deep', icon: 'info', metrics: pm('2 092 470,19 ₽ / 1012 шт.', '2 356 778,09 ₽ / 1197 шт.', '−60 339,70 ₽ / 29 шт.', '1 190 513,03 ₽', '988 134,74 ₽') },
-    { title: 'Прошлый месяц', subtitle: '01.05.2026 до 31.05.2026', gradient: 'periwinkle', metrics: pm('5 153 549,38 ₽ / 2729 шт.', '5 933 740,81 ₽ / 3130 шт.', '−278 682,95 ₽ / 134 шт.', '2 632 463,60 ₽', '2 141 283,49 ₽') },
+    { title: 'Сегодня', subtitle: '11.06.2026', gradient: 'blue', footerText: 'Больше', metrics: pm('176 196,45 ₽ / 89 шт.', '173 750,93 ₽ / 110 шт.', '−3 637,89 ₽ / 1 шт.', '122 928,35 ₽', '88 038,35 ₽') },
+    { title: 'Вчера', subtitle: '10.06.2026', gradient: 'muted', footerText: 'Больше', metrics: pm('173 322,34 ₽ / 84 шт.', '215 723,77 ₽ / 104 шт.', '−2 541,00 ₽ / 2 шт.', '101 676,38 ₽', '84 747,10 ₽') },
+    { title: 'Текущий месяц', subtitle: '01.06.2026 до 11.06.2026', gradient: 'indigo-deep', icon: 'info', footerText: 'Больше', metrics: pm('2 092 470,19 ₽ / 1012 шт.', '2 356 778,09 ₽ / 1197 шт.', '−60 339,70 ₽ / 29 шт.', '1 190 513,03 ₽', '988 134,74 ₽') },
+    { title: 'Прошлый месяц', subtitle: '01.05.2026 до 31.05.2026', gradient: 'periwinkle', footerText: 'Больше', metrics: pm('5 153 549,38 ₽ / 2729 шт.', '5 933 740,81 ₽ / 3130 шт.', '−278 682,95 ₽ / 134 шт.', '2 632 463,60 ₽', '2 141 283,49 ₽') },
 ];
 function pm(sales, orders, refunds, payout, profit) {
     return [
@@ -263,7 +260,6 @@ function neg(v) { return typeof v === 'string' && v.includes('−'); }
 .tbar__right { display: flex; align-items: center; gap: var(--size-16); flex-wrap: wrap; }
 .tbar__link { border: 0; background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; display: inline-flex; align-items: center; gap: var(--size-4); }
 
-.grp { font-weight: var(--font-weight-semibold); color: var(--text-heading); }
 .more-btn { border: 0; background: transparent; color: var(--text-muted); font-size: var(--font-size-title-m); line-height: 1; cursor: pointer; }
 .more-btn:hover { color: var(--brand); }
 .pos { color: var(--accent-positive); }

@@ -111,7 +111,24 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    // Рисовать ли служебную деталь-колонку «→» и деталь-модалку в compact/scroll.
+    // Отключить, если у страницы уже есть своя колонка-«Инфо» (чтобы не дублировать).
+    mobileDetail: {
+        type: Boolean,
+        default: true,
+    },
+    // Имя поля строки, помечающего её как строку-ГРУППУ (агрегат при группировке).
+    // Такие строки получают класс ds-table__row--group (жирные).
+    groupKey: {
+        type: String,
+        default: '',
+    },
 });
+
+// Является ли строка группой (по полю groupKey).
+function isGroupRow(row) {
+    return !!(props.groupKey && row && row[props.groupKey]);
+}
 
 const emit = defineEmits(['row-click', 'toggle-expand', 'row-detail', 'sort']);
 
@@ -171,7 +188,7 @@ const flatRows = computed(() => {
 });
 
 // Кол-во колонок (для colspan пустого состояния; +1 на служебную деталь-колонку).
-const colCount = computed(() => props.columns.length + (hasDetail.value ? 1 : 0));
+const colCount = computed(() => props.columns.length + (showAutoDetail.value ? 1 : 0));
 
 // Выравнивание ячейки: numeric → right, иначе column.align или left.
 function alignOf(column) {
@@ -184,6 +201,8 @@ const isCompact = computed(() => props.mobileMode === 'compact');
 const isScroll = computed(() => props.mobileMode === 'scroll');
 // Оба режима показывают служебную колонку «деталь» и рендерят деталь-модалку.
 const hasDetail = computed(() => isCompact.value || isScroll.value);
+// Реально рисуем авто-деталь-колонку только если страница не отключила её (mobileDetail).
+const showAutoDetail = computed(() => hasDetail.value && props.mobileDetail);
 
 // Реактивный флаг «мобайл» (<md). На мобайле в compact-режиме НЕ подставляем
 // фиксированную column.width — иначе таблица переполняет экран. Брейкпоинт
@@ -287,7 +306,7 @@ defineExpose({ openDetail });
                         </slot>
                     </th>
                     <!-- Служебная колонка «Подробнее» (compact/scroll, видна на <md) -->
-                    <th v-if="hasDetail" class="ds-table__th ds-table__th--detail" aria-hidden="true"></th>
+                    <th v-if="showAutoDetail" class="ds-table__th ds-table__th--detail" aria-hidden="true"></th>
                 </tr>
             </thead>
 
@@ -310,6 +329,7 @@ defineExpose({ openDetail });
                             'ds-table__row--hover': hover,
                             'ds-table__row--expandable': r.hasChildren,
                             'ds-table__row--child': r.depth > 0,
+                            'ds-table__row--group': isGroupRow(r.row),
                             'is-expanded': r.expanded,
                         }"
                         @click="emit('row-click', { row: r.row })"
@@ -365,7 +385,7 @@ defineExpose({ openDetail });
                         </td>
 
                         <!-- Служебная ячейка «Подробнее» (compact/scroll, видна на <md) -->
-                        <td v-if="hasDetail" class="ds-table__td ds-table__td--detail">
+                        <td v-if="showAutoDetail" class="ds-table__td ds-table__td--detail">
                             <button
                                 type="button"
                                 class="ds-table__detail-btn"
@@ -386,7 +406,7 @@ defineExpose({ openDetail });
 
     <!-- ─── Деталь-модалка (compact/scroll): все поля строки label: value ─ -->
     <DsModal
-        v-if="hasDetail"
+        v-if="showAutoDetail"
         v-model="detailOpen"
         size="fullscreen"
         :title="detailHeading"
@@ -520,6 +540,9 @@ defineExpose({ openDetail });
 
 /* Дочерние строки раскрытия — подложка subtle. */
 .ds-table__row--child > .ds-table__td { background: var(--surface-subtle); }
+
+/* Строка-группа (агрегат при группировке) — выделена жирным. */
+.ds-table__row--group > .ds-table__td { font-weight: var(--font-weight-semibold); color: var(--text-heading); }
 
 /* ─── Лид-ячейка с триггером раскрытия ────────────────────────── */
 .ds-table__lead {
