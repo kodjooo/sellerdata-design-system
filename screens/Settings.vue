@@ -14,6 +14,22 @@
         </template>
 
         <div class="screen">
+            <!-- Под-меню настроек: Общие | Оплата | Пригласи друга -->
+            <nav class="settings-submenu">
+                <Link
+                    :href="route('designSystem.screenSettings')"
+                    class="t-label-m settings-submenu__link is-active"
+                >Общие</Link>
+                <Link
+                    :href="route('designSystem.screenSettingsBilling')"
+                    class="t-label-m settings-submenu__link"
+                >Оплата</Link>
+                <Link
+                    :href="route('designSystem.screenSettingsReferral')"
+                    class="t-label-m settings-submenu__link"
+                >Пригласи друга</Link>
+            </nav>
+
             <!-- Онбординг-баннер раздела (реал: BreezeDashboardInfo «Режим настроек…») -->
             <DsNotice v-model:visible="hintOpen" tone="plain" collapse-mobile>
                 <template #media><span class="hint-thumb" aria-hidden="true"></span></template>
@@ -249,147 +265,12 @@
                 <DsButton variant="primary" :disabled="!newMarketplace">Продолжить</DsButton>
             </template>
         </DsModal>
-
-        <!-- ════════════════════════════════════════════════════════════
-             РАЗДЕЛ «ТАРИФ / ОПЛАТА» (реал /pricing) — второй экран-эталон
-             ════════════════════════════════════════════════════════════ -->
-        <div class="screen screen--pricing">
-            <h2 class="t-heading-m section__title">Тарифы</h2>
-
-            <DsCard radius="lg" padding="--size-24" tag="section">
-                <!-- Сегментные переключатели: срок оплаты (слева) + валюта (справа) -->
-                <div class="pricing-head">
-                    <div class="pricing-head__group">
-                        <span class="t-body-s pricing-head__label">Срок оплаты</span>
-                        <div class="segment">
-                            <button
-                                v-for="p in periods"
-                                :key="p.key"
-                                type="button"
-                                class="segment__btn"
-                                :class="{ 'is-active': period === p.key }"
-                                @click="period = p.key"
-                            >
-                                <span>{{ p.label }}</span>
-                                <span v-if="p.badge" class="segment__badge">{{ p.badge }}</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="pricing-head__group">
-                        <span class="t-body-s pricing-head__label">Валюта</span>
-                        <div class="segment">
-                            <button
-                                v-for="c in currencies"
-                                :key="c.code"
-                                type="button"
-                                class="segment__btn"
-                                :class="{ 'is-active': currency === c.code }"
-                                @click="currency = c.code"
-                            >
-                                {{ c.symbol }} {{ c.name }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Сетка тарифов: левая колонка-легенда + 3 пакета -->
-                <div class="plans">
-                    <div class="plans__legend">
-                        <div v-for="row in legend" :key="row.label" class="plans__legend-row">
-                            <span class="plans__legend-ico" :class="row.icon" aria-hidden="true"></span>
-                            <span class="t-body-s">{{ row.label }}</span>
-                            <span v-if="row.info" class="fm-info plans__legend-info" aria-hidden="true"></span>
-                        </div>
-                    </div>
-
-                    <div
-                        v-for="plan in plans"
-                        :key="plan.id"
-                        class="plan"
-                        :class="{ 'is-current': plan.current }"
-                    >
-                        <div class="plan__head">
-                            <span class="t-heading-m plan__name">{{ plan.title }}</span>
-                            <span class="t-body-s plan__price-old">{{ plan.priceOld }} ₽<span class="plan__per">/месяц</span></span>
-                            <span class="plan__price">{{ plan.price }} ₽<span class="plan__per">/месяц</span></span>
-                            <span class="t-body-s plan__payment">{{ plan.yearly }} ₽ за год</span>
-                        </div>
-                        <div class="t-body-s plan__limit">{{ plan.limit }}</div>
-                        <div class="plan__rows">
-                            <div class="plan__row plan__row--accounts">{{ plan.accounts }}</div>
-                            <div v-for="(on, i) in plan.features" :key="i" class="plan__row">
-                                <span v-if="on" class="fm-check plan__check" aria-hidden="true"></span>
-                            </div>
-                        </div>
-                        <div class="plan__actions">
-                            <DsButton variant="primary" :disabled="plan.current" @click="openBuy(plan)">
-                                {{ plan.current ? 'Текущий пакет' : 'Купить' }}
-                            </DsButton>
-                        </div>
-                    </div>
-                </div>
-            </DsCard>
-        </div>
-
-        <!-- ─── Модалка «Как вы будете платить?» (реал buyModal) ─── -->
-        <DsModal v-model="buyOpen" title="Как вы будете платить?" size="md">
-            <!-- Шапка-пакет (brand-gradient) -->
-            <div class="buy-pack">
-                <span class="t-body-s buy-pack__label">Пакет</span>
-                <span class="t-heading-l buy-pack__title">{{ buyPlan.title }}</span>
-                <span class="buy-pack__price">{{ buyPlan.yearly }},00 ₽<span class="buy-pack__per">в год</span></span>
-            </div>
-
-            <!-- Сводка платежа (реал payment-success__summary) -->
-            <DsInfoList :items="buySummary" flat class="buy-summary" />
-
-            <div class="buy-field">
-                <span class="t-label-m buy-field__label">Страна</span>
-                <DsSelect v-model="country" :options="countryOptions" :show-footer="false" placeholder="Выберите страну" />
-            </div>
-
-            <!-- Способ оплаты: карта / счёт (реал pricing-payment-type) -->
-            <div class="pay-type">
-                <button
-                    v-for="m in payMethods"
-                    :key="m.key"
-                    type="button"
-                    class="pay-type__opt"
-                    :class="{ 'is-active': payMethod === m.key }"
-                    @click="payMethod = m.key"
-                >
-                    <span class="pay-type__ico" :class="m.icon" aria-hidden="true"></span>
-                    <span class="t-body-s pay-type__text">{{ m.label }}</span>
-                </button>
-            </div>
-
-            <!-- Тип лица: физ/юр (radio) -->
-            <div class="jur">
-                <DsCheckbox v-model="jurType" type="radio" value="0" label="Физическое лицо" />
-                <DsCheckbox v-model="jurType" type="radio" value="1" label="Юридическое лицо" />
-            </div>
-
-            <template v-if="jurType === '1'">
-                <DsInput v-model="companyName" label="Название фирмы" placeholder="" class="jur-field" />
-                <DsInput v-model="inn" label="ИНН" placeholder="" class="jur-field" />
-            </template>
-
-            <DsCheckbox v-if="payMethod === 'card'" v-model="agreeTerms" class="jur-agree">
-                <strong>Я понимаю, что оформляется автоплатеж</strong> в соответствии с условиями подписки.
-            </DsCheckbox>
-            <DsCheckbox v-model="agreePersonal" class="jur-agree" label="Я согласен с условиями обработки персональных данных" />
-
-            <template #footer>
-                <DsButton variant="primary" :disabled="!canPay">Далее</DsButton>
-            </template>
-        </DsModal>
     </DsAppShell>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
-import { Head } from '@inertiajs/vue3';
+import { ref } from 'vue';
+import { Head, Link } from '@inertiajs/vue3';
 import DsAppShell from '@/Components/Ds/DsAppShell.vue';
 import DsCard from '@/Components/Ds/DsCard.vue';
 import DsButton from '@/Components/Ds/DsButton.vue';
@@ -399,7 +280,6 @@ import DsSelect from '@/Components/Ds/DsSelect.vue';
 import DsCheckbox from '@/Components/Ds/DsCheckbox.vue';
 import DsModal from '@/Components/Ds/DsModal.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
-import DsInfoList from '@/Components/Ds/DsInfoList.vue';
 import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
 
 // Сайдбар — сверен с реальным Authenticated.vue (как в Screens/Expenses.vue).
@@ -474,82 +354,6 @@ function openDelete(store) { if (!store.canDelete) return; deleteOpen.value = tr
 const addOpen = ref(false);
 const newMarketplace = ref('');
 const marketplaces = ['Wildberries', 'Ozon', 'Яндекс Маркет'];
-
-// ── Тарифы ──
-const period = ref('yearly');
-const periods = [
-    { key: 'monthly', label: '1 месяц' },
-    { key: 'halfyearly', label: '6 месяцев', badge: '-10%' },
-    { key: 'yearly', label: '12 месяцев', badge: '-20%' },
-];
-const currency = ref('RUB');
-const currencies = [
-    { code: 'RUB', symbol: '₽', name: 'Рубли' },
-    { code: 'KZT', symbol: '₸', name: 'Тенге' },
-];
-
-// Легенда фич (реал pricing__left) — порядок 1:1 со скрином.
-const legend = [
-    { label: 'Оборот', icon: 'fm-trending-up', info: true },
-    { label: 'Магазины', icon: 'fm-shopping-bag', info: true },
-    { label: 'Дэшборд', icon: 'fm-layout' },
-    { label: 'Товары', icon: 'fm-clipboard' },
-    { label: 'Расходы', icon: 'fm-credit-card' },
-    { label: 'Импорт себестоимости', icon: 'fm-upload' },
-    { label: 'Самовыкупы', icon: 'fm-rotate-ccw' },
-    { label: 'Склад', icon: 'fm-archive' },
-    { label: 'Диаграммы', icon: 'fm-trending-up', info: true },
-    { label: 'Чат поддержки', icon: 'fm-message-circle' },
-];
-
-// Пакеты (реал packs; цены/лимиты — со скрина тариф__список@wb, период 12 мес).
-const plans = [
-    {
-        id: 'start', title: 'Старт', priceOld: '500', price: '400', yearly: '4 800',
-        limit: 'до 200 000 ₽/мес', accounts: '1', current: true,
-        features: [true, true, true, false, false, false, false, false],
-    },
-    {
-        id: 'standard', title: 'Стандарт', priceOld: '1 500', price: '1 200', yearly: '14 400',
-        limit: 'до 1 000 000 ₽/мес', accounts: '2', current: false,
-        features: [true, true, true, true, true, false, false, false],
-    },
-    {
-        id: 'business', title: 'Бизнес', priceOld: '2 500', price: '2 000', yearly: '24 000',
-        limit: 'неограниченно', accounts: '10', current: false,
-        features: [true, true, true, true, true, true, true, true],
-    },
-];
-
-// ── Модалка «Как вы будете платить?» ──
-const buyOpen = ref(false);
-const buyPlan = ref(plans[2]);
-const country = ref('Россия');
-const countryOptions = ['Россия', 'Беларусь (Мир)', 'Казахстан', 'Узбекистан', 'Армения'];
-const payMethod = ref('card');
-const payMethods = [
-    { key: 'card', label: 'Банковская карта', icon: 'fm-credit-card' },
-    { key: 'invoice', label: 'Счет на оплату', icon: 'fm-file-text' },
-];
-const jurType = ref('1');
-const companyName = ref('');
-const inn = ref('');
-const agreeTerms = ref(false);
-const agreePersonal = ref(false);
-
-const buySummary = computed(() => [
-    { label: 'Периодичность', value: 'Ежегодная подписка' },
-    { label: 'Аванс на 11.06.2026', value: '0,00 ₽' },
-    { label: 'Остаток к оплате', value: `${buyPlan.value.yearly},00 ₽`, strong: true },
-    { label: 'Следующее списание', value: '11.06.2027' },
-    { label: 'Сумма списания', value: `${buyPlan.value.yearly},00 ₽` },
-]);
-const canPay = computed(() => agreePersonal.value && (payMethod.value === 'invoice' || agreeTerms.value));
-
-function openBuy(plan) {
-    buyPlan.value = plan;
-    buyOpen.value = true;
-}
 </script>
 
 <style lang="scss" scoped>
@@ -562,7 +366,24 @@ function openBuy(plan) {
 .topbar__ico { color: var(--text-muted); font-size: var(--font-size-heading-m); cursor: pointer; }
 
 .screen { display: flex; flex-direction: column; gap: var(--size-16); }
-.screen--pricing { margin-top: var(--size-32); }
+
+/* Под-меню настроек (underline-вкладки на Link, единый паттерн на 3 страницах) */
+.settings-submenu {
+    display: flex; align-items: center; gap: var(--size-24);
+    border-bottom: 1px solid var(--border-default); margin-bottom: var(--size-8);
+}
+.settings-submenu__link {
+    position: relative; padding: var(--size-8) 0;
+    color: var(--text-default); text-decoration: none;
+    transition: color var(--transition-base) var(--ease-standard);
+}
+.settings-submenu__link:hover { color: var(--brand); }
+.settings-submenu__link.is-active { color: var(--brand); }
+.settings-submenu__link.is-active::after {
+    content: ''; position: absolute; left: 0; right: 0;
+    bottom: calc(var(--border-width-accent) * -1); height: var(--border-width-accent);
+    border-radius: var(--radius-sm); background: var(--brand);
+}
 
 .hint-thumb { display: block; width: 96px; height: 56px; border-radius: var(--radius-sm); background: var(--brand-gradient); }
 
@@ -706,113 +527,4 @@ function openBuy(plan) {
 }
 .add-opt:hover { border-color: var(--border-strong); }
 .add-opt.is-active { border-color: var(--brand); background: var(--surface-subtle); }
-
-/* ── Тарифы: сегментные переключатели ── */
-.pricing-head {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    gap: var(--size-24); flex-wrap: wrap; margin-bottom: var(--size-32);
-}
-.pricing-head__group { display: flex; flex-direction: column; align-items: center; gap: var(--size-8); }
-.pricing-head__label { color: var(--text-heading); font-weight: var(--font-weight-semibold); }
-/* Сегмент (реал radioGroup): pill-контейнер, активная кнопка — brand. */
-.segment {
-    display: inline-flex; align-items: center; gap: var(--size-2);
-    padding: var(--size-4); border-radius: var(--radius-full);
-    background: transparent; border: 1px solid var(--border-default);
-}
-.segment__btn {
-    display: inline-flex; align-items: center; gap: var(--size-6);
-    padding: var(--size-4) var(--size-20); border: 0; border-radius: var(--radius-full);
-    background: transparent; color: var(--text-default); font-size: var(--font-size-body-s);
-    cursor: pointer; white-space: nowrap;
-    transition: background-color var(--transition-fast) var(--ease-standard);
-}
-.segment__btn.is-active { background: var(--brand); color: var(--text-on-brand); }
-.segment__badge {
-    padding: var(--size-2) var(--size-6); border-radius: var(--radius-full);
-    background: rgb(from var(--white) r g b / 0.2); font-size: var(--font-size-caption);
-}
-.segment__btn:not(.is-active) .segment__badge { background: var(--surface-disabled); color: var(--text-muted); }
-
-/* ── Сетка тарифов ── */
-.plans {
-    display: grid; grid-template-columns: minmax(180px, 1.2fr) repeat(3, 1fr);
-    gap: var(--size-16);
-}
-.plans__legend { display: flex; flex-direction: column; justify-content: flex-end; }
-.plans__legend-row {
-    display: flex; align-items: center; gap: var(--size-8);
-    height: var(--size-48); border-bottom: 1px solid var(--border-default);
-    color: var(--text-default);
-}
-.plans__legend-ico { color: var(--text-muted); font-size: var(--font-size-title-m); }
-.plans__legend-info { margin-left: auto; color: var(--text-muted); }
-
-.plan {
-    display: flex; flex-direction: column;
-    border: 1px solid var(--border-default); border-radius: var(--radius-md);
-    background: var(--surface-default); overflow: hidden;
-}
-.plan.is-current { border-color: var(--brand); }
-.plan__head {
-    display: flex; flex-direction: column; align-items: center; gap: var(--size-2);
-    padding: var(--size-16); border-bottom: 1px solid var(--border-default);
-}
-.plan__name { color: var(--text-heading); }
-.plan__price-old { color: var(--text-muted); text-decoration: line-through; }
-.plan__price { font-size: var(--font-size-heading-m); font-weight: var(--font-weight-bold); color: var(--text-heading); }
-.plan__per { font-size: var(--font-size-body-s); font-weight: var(--font-weight-regular); color: var(--text-muted); margin-left: var(--size-4); }
-.plan__payment { color: var(--text-muted); }
-.plan__limit {
-    display: flex; align-items: center; justify-content: center;
-    height: var(--size-48); border-bottom: 1px solid var(--border-default);
-    color: var(--text-heading); font-weight: var(--font-weight-semibold); text-align: center;
-}
-.plan__rows { display: flex; flex-direction: column; }
-.plan__row {
-    display: flex; align-items: center; justify-content: center;
-    height: var(--size-48); border-bottom: 1px solid var(--border-default);
-    color: var(--text-heading);
-}
-.plan__row--accounts { font-weight: var(--font-weight-semibold); }
-.plan__check { color: var(--text-heading); }
-.plan__actions { margin-top: auto; padding: var(--size-16); }
-.plan__actions :deep(.ds-btn) { width: 100%; }
-
-@include respond-below(lg) {
-    .plans { grid-template-columns: 1fr; }
-    .plans__legend { display: none; }
-}
-
-/* ── Модалка покупки ── */
-.buy-pack {
-    display: grid; grid-template-columns: 1fr auto; align-items: center; gap: var(--size-4);
-    padding: var(--size-20); margin-bottom: var(--size-16);
-    border-radius: var(--radius-md); background: var(--brand-gradient); color: var(--text-on-brand);
-}
-.buy-pack__label { grid-column: 1; color: var(--text-on-brand); opacity: var(--opacity-hover); }
-.buy-pack__title { grid-column: 1; grid-row: 2; color: var(--text-on-brand); }
-.buy-pack__price { grid-column: 2; grid-row: 1 / span 2; text-align: right; font-size: var(--font-size-heading-l); font-weight: var(--font-weight-bold); }
-.buy-pack__per { display: block; font-size: var(--font-size-body-s); font-weight: var(--font-weight-regular); opacity: var(--opacity-hover); }
-.buy-summary { margin-bottom: var(--size-16); }
-
-.buy-field { display: flex; flex-direction: column; gap: var(--size-6); margin-bottom: var(--size-16); }
-.buy-field__label { color: var(--text-default); }
-
-.pay-type { display: grid; grid-template-columns: 1fr 1fr; gap: var(--size-12); margin-bottom: var(--size-16); }
-.pay-type__opt {
-    display: flex; flex-direction: column; align-items: center; gap: var(--size-8);
-    padding: var(--size-16); border: 1px solid var(--border-default); border-radius: var(--radius-md);
-    background: var(--surface-default); cursor: pointer;
-    transition: border-color var(--transition-fast) var(--ease-standard);
-}
-.pay-type__opt:hover { border-color: var(--border-strong); }
-.pay-type__opt.is-active { border-color: var(--brand); }
-.pay-type__ico { font-size: var(--font-size-heading-m); color: var(--brand); }
-.pay-type__opt:not(.is-active) .pay-type__text { color: var(--text-heading); }
-.pay-type__opt.is-active .pay-type__text { color: var(--brand); }
-
-.jur { display: flex; gap: var(--size-24); margin-bottom: var(--size-16); }
-.jur-field { margin-bottom: var(--size-16); }
-.jur-agree { display: flex; margin-bottom: var(--size-12); align-items: flex-start; }
 </style>
