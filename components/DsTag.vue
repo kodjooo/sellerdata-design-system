@@ -55,7 +55,9 @@ defineProps({
     line-height: 1.43;
     font-weight: 600;
 }
-.ds-tag--soft.ds-tag--success { color: var(--status-success); background-color: var(--accent-positive-bg); }
+/* soft success: текст из той же зелёной палитры, что и фон (--accent-positive = green-600),
+   а не teal-500 — иначе бирюзовый текст на зелёном фоне (несогласованность; реал — зелёный). */
+.ds-tag--soft.ds-tag--success { color: var(--accent-positive); background-color: var(--accent-positive-bg); }
 .ds-tag--soft.ds-tag--warning { color: var(--notice-text-strong); background-color: var(--notice-bg); }
 .ds-tag--soft.ds-tag--danger  { color: var(--status-danger); background-color: var(--status-danger-bg); }
 .ds-tag--soft.ds-tag--default { color: var(--text-muted); background-color: var(--surface-muted); }

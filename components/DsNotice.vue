@@ -5,7 +5,7 @@
         крестик закрытия справа.
     -->
     <transition name="ds-notice">
-        <div v-if="visible" class="ds-notice" :class="`ds-notice--${tone}`" role="note">
+        <div v-if="visible" class="ds-notice" :class="[`ds-notice--${tone}`, { 'ds-notice--collapse-mobile': collapseMobile }]" role="note">
             <div v-if="$slots.media" class="ds-notice__media">
                 <slot name="media" />
             </div>
@@ -35,6 +35,8 @@ const props = defineProps({
     tone: { type: String, default: 'plain', validator: (v) => ['plain', 'info', 'peach'].includes(v) },
     dismissible: { type: Boolean, default: true },
     visible: { type: Boolean, default: true },
+    // На мобайле (<md) свернуть текст до 2 строк и уменьшить медиа — как реальный баннер в кабинете.
+    collapseMobile: { type: Boolean, default: false },
 });
 const emit = defineEmits(['close', 'update:visible']);
 const visible = computed(() => props.visible);
@@ -84,4 +86,19 @@ function onClose() { emit('update:visible', false); emit('close'); }
 
 .ds-notice-enter-active, .ds-notice-leave-active { transition: opacity var(--transition-base) var(--ease-standard); }
 .ds-notice-enter-from, .ds-notice-leave-to { opacity: var(--opacity-hidden); }
+
+/* Мобильный свёрнутый вид: текст в 2 строки с многоточием, компактное превью (реал-баннер) */
+@media (max-width: 767.98px) {
+    .ds-notice--collapse-mobile .ds-notice__text {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .ds-notice--collapse-mobile .ds-notice__media :deep(.hint-thumb),
+    .ds-notice--collapse-mobile .ds-notice__media :deep(img) {
+        width: var(--size-64);
+        height: var(--size-40);
+    }
+}
 </style>

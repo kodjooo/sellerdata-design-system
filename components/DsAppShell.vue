@@ -186,10 +186,16 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEsc));
     justify-content: center;
     height: var(--size-48);
     margin-bottom: var(--size-8);
+    padding: 0 var(--size-4);
     color: var(--brand);
-    font-size: var(--font-size-title-m);
+    font-size: var(--font-size-body-s);
     font-weight: var(--font-weight-bold);
+    /* Узкий rail (96px): лого не должно переполнять/ломать раскладку. */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+.ds-app-shell__logo > :deep(*) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .ds-app-shell__nav { display: flex; flex-direction: column; gap: var(--size-4); }
 

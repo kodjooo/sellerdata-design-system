@@ -12,13 +12,13 @@
                 :class="{
                     'is-strong': r.strong,
                     'is-bg': r.bg,
-                    'is-expandable': r.children && r.children.length,
+                    'is-expandable': !flat && r.children && r.children.length,
                 }"
-                @click="r.children && r.children.length && toggle(i)"
+                @click="!flat && r.children && r.children.length && toggle(i)"
             >
                 <dt class="t-body-s ds-info-list__label">
                     <span
-                        v-if="r.children && r.children.length"
+                        v-if="!flat && r.children && r.children.length"
                         class="ds-info-list__chev"
                         :class="{ 'is-open': open.has(i) }"
                         aria-hidden="true"
@@ -28,7 +28,7 @@
                 </dt>
                 <dd class="t-body-s ds-info-list__value">{{ r.value }}</dd>
             </div>
-            <template v-if="r.children && open.has(i)">
+            <template v-if="r.children && (flat || open.has(i))">
                 <div
                     v-for="c in r.children"
                     :key="c.label"
@@ -50,6 +50,9 @@ const props = defineProps({
     items: { type: Array, default: () => [] },
     // Индексы строк, раскрытых изначально.
     defaultOpen: { type: Array, default: () => [] },
+    // Плоский режим: все дочерние строки показаны всегда, без аккордеона и маркеров
+    // (реал-сводка дашборда — плоский список, а не раскрывающийся).
+    flat: { type: Boolean, default: false },
 });
 
 const open = ref(new Set(props.defaultOpen));

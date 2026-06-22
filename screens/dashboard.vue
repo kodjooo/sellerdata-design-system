@@ -15,8 +15,12 @@
         </template>
 
         <div class="screen">
+            <!-- Вкладки Плитки/Диаграмма: на мобайле отдельной центрированной строкой (реал),
+                 на десктопе — в топбаре рядом с заголовком (см. #title). -->
+            <DsTabs v-model="view" :tabs="views" class="screen__tabs-mobile" />
+
             <!-- Онбординг-баннер -->
-            <DsNotice v-model:visible="hintOpen" tone="plain">
+            <DsNotice v-model:visible="hintOpen" tone="plain" collapse-mobile>
                 <template #media><span class="hint-thumb" aria-hidden="true"></span></template>
                 Используйте Панель инструментов для анализа ключевых показателей эффективности.
                 Нажмите «Больше» в плитках периодов или стрелку справа в строке товара, чтобы увидеть
@@ -24,35 +28,42 @@
                 графического отображения данных за выбранный период.
             </DsNotice>
 
-            <!-- Верхний тулбар: поиск + фильтр + период -->
+            <!-- Верхний тулбар: поиск + фильтр + период (десктоп). Мобайл: уходит в воронку. -->
             <div class="bar">
                 <DsSelect v-model="search" :options="[]" placeholder="Товары" searchable class="bar__search" />
+                <DsSelect v-model="country" :options="countries" placeholder="Все страны" :show-footer="false" class="bar__country" />
                 <DsButton variant="secondary"><template #iconLeft>⚲</template>Фильтр</DsButton>
-                <button type="button" class="bar__date fm-calendar" aria-label="Период"></button>
+                <DsIconButton icon="fm-calendar" size="lg" aria-label="Период" class="bar__date" />
             </div>
 
             <!-- ВЕРХНИЙ БЛОК — переключается вкладками Плитки/Диаграмма -->
-            <DsSummaryCarousel v-if="view === 'grid'" :items="periods" featured-first :card-columns="2" />
+            <DsSummaryCarousel v-if="view === 'grid'" :items="periods" featured-first :card-columns="2">
+                <template #tabs-action>
+                    <DsIconButton icon="fm-filter" aria-label="Фильтр" @click="filterOpen = true" />
+                </template>
+            </DsSummaryCarousel>
             <div v-else class="chart">
                 <DsCard radius="lg" class="chart__graph">
                     <DsChart :labels="chartLabels" :series="chartSeries" />
                 </DsCard>
                 <DsCard radius="lg" class="chart__sum">
                     <DsTabs v-model="sumTab" :tabs="sumTabs" />
-                    <DsInfoList :items="summary" :default-open="[0]" class="chart__sumlist" />
+                    <DsInfoList :items="summary" flat class="chart__sumlist" />
                 </DsCard>
             </div>
 
-            <!-- ТАБЛИЦА ТОВАРОВ — всегда снизу, в обоих видах -->
-            <div class="tbar">
-                <DsTabs v-model="metric" :tabs="metricTabs" />
-                <div class="tbar__right">
-                    <button type="button" class="tbar__link fm-download"> Скачать таблицу (.xls)</button>
-                    <DsSelect v-model="group" :options="groups" placeholder="Группировать по" :show-footer="false" class="tbar__group" />
-                </div>
-            </div>
-
+            <!-- ТАБЛИЦА ТОВАРОВ — тулбар (табы/действия) ВХОДИТ в белую карточку таблицы (реал table-tabs) -->
             <DsCard radius="md" padding="--size-2">
+                <div class="tbar">
+                    <DsTabs v-model="metric" :tabs="metricTabs" />
+                    <div class="tbar__right">
+                        <button type="button" class="tbar__link fm-download"> Скачать таблицу (.xls)</button>
+                        <span class="tbar__group">
+                            <span class="tbar__group-label">Группировать по</span>
+                            <button type="button" class="tbar__group-value">{{ group }}<span class="fm-chevron-down" aria-hidden="true"></span></button>
+                        </span>
+                    </div>
+                </div>
                 <DsTable
                     :columns="cols" :rows="rows" row-key="id" expandable default-sort-key="profit"
                     mobile-mode="compact" :mobile-columns="['name', 'lead', 'profit', 'info']" :mobile-detail="false"
@@ -80,6 +91,14 @@
             <div class="tfoot">
                 <DsPagination :page="page" :total="690" :per-page="50" @change="p => page = p" />
             </div>
+
+            <!-- Мобильный фильтр: full-screen лист (реал /dashboard мобайл — воронка) -->
+            <DsFilterSheet
+                v-model:visible="filterOpen"
+                :items="filterItems"
+                @reset="filterOpen = false"
+                @apply="filterOpen = false"
+            />
         </div>
     </DsAppShell>
 </template>
@@ -94,6 +113,7 @@ import DsTabs from '@/Components/Ds/DsTabs.vue';
 import DsCard from '@/Components/Ds/DsCard.vue';
 import DsChart from '@/Components/Ds/DsChart.vue';
 import DsButton from '@/Components/Ds/DsButton.vue';
+import DsIconButton from '@/Components/Ds/DsIconButton.vue';
 import DsSelect from '@/Components/Ds/DsSelect.vue';
 import DsTable from '@/Components/Ds/DsTable.vue';
 import DsPagination from '@/Components/Ds/DsPagination.vue';
@@ -101,22 +121,34 @@ import DsProductCell from '@/Components/Ds/DsProductCell.vue';
 import DsInfoList from '@/Components/Ds/DsInfoList.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
 import DsAccountBadge from '@/Components/Ds/DsAccountBadge.vue';
+import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
 
 // Иконки сверены с реальным сайдбаром (Authenticated.vue).
 const nav = [
-    { key: 'dashboard', label: 'Дэшборд', icon: 'fm-layout', href: '#' },
-    { key: 'products', label: 'Товары', icon: 'fm-clipboard', href: '#' },
-    { key: 'expenses', label: 'Расходы', icon: 'fm-credit-card', href: '#' },
-    { key: 'redeems', label: 'Самовыкупы', icon: 'fm-rotate-ccw', href: '#' },
-    { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: '#' },
-    { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: '#' },
-    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: '#' },
+    { key: 'dashboard', label: 'Дэшборд', icon: 'fm-layout', href: route('designSystem.screenDashboard') },
+    { key: 'products', label: 'Товары', icon: 'fm-clipboard', href: route('designSystem.screenProducts') },
+    { key: 'expenses', label: 'Расходы', icon: 'fm-credit-card', href: route('designSystem.screenExpenses') },
+    { key: 'redeems', label: 'Самовыкупы', icon: 'fm-rotate-ccw', href: route('designSystem.screenRedeems') },
+    { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: route('designSystem.screenAdvertising') },
+    { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: route('designSystem.screenWarehouse') },
+    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') },
 ];
 
 const hintOpen = ref(true);
-const view = ref('chart');
+const view = ref('grid');
 const views = [{ key: 'grid', label: 'Плитки', icon: 'fm-grid' }, { key: 'chart', label: 'Диаграмма', icon: 'fm-trending-up' }];
 const search = ref(null);
+const country = ref(null);
+const countries = ['Все страны', 'Россия', 'Беларусь', 'Казахстан', 'Армения', 'Киргизия'];
+
+// Мобильный фильтр (full-screen лист): поиск/страна/фильтр/период с десктоп-тулбара.
+const filterOpen = ref(false);
+const filterItems = [
+    { key: 'search', label: 'Товары', icon: 'fm-calendar' },
+    { key: 'country', label: 'Все страны', icon: 'fm-globe' },
+    { key: 'filter', label: 'Фильтр', icon: 'fm-filter' },
+    { key: 'period', label: 'Период', icon: 'fm-box' },
+];
 
 // ── Период-карточки (реальные числа account 4) ──
 const periods = [
@@ -164,7 +196,7 @@ const summary = [
 // ── Таблица товаров ──
 const metric = ref('orders');
 const metricTabs = [{ key: 'sales', label: 'Продажи' }, { key: 'orders', label: 'Заказы' }];
-const group = ref(null);
+const group = ref('Артикулу');
 const groups = ['Не группировать', 'Артикулу', 'Бренду'];
 const page = ref(1);
 
@@ -225,7 +257,7 @@ function neg(v) { return typeof v === 'string' && v.includes('−'); }
 
 <style scoped>
 /* ── Каркас: лого / топбар / аккаунт ── */
-.brand { font-size: var(--font-size-heading-m); font-weight: var(--font-weight-bold); color: var(--brand); }
+.brand { font-size: var(--font-size-body-s); font-weight: var(--font-weight-bold); color: var(--brand); }
 .topbar { display: inline-flex; align-items: center; gap: var(--size-24); }
 .topbar__page { color: var(--text-heading); }
 .topbar__ico { color: var(--text-muted); font-size: var(--font-size-heading-m); cursor: pointer; }
@@ -235,10 +267,28 @@ function neg(v) { return typeof v === 'string' && v.includes('−'); }
 
 .hint-thumb { display: block; width: 96px; height: 56px; border-radius: var(--radius-sm); background: var(--brand-gradient); }
 
+/* Вкладки Плитки/Диаграмма: десктоп — в топбаре, мобайл — отдельная центрированная строка */
+.screen__tabs-mobile { display: none; }
+@media (max-width: 767.98px) {
+    .topbar__tabs { display: none; }
+    .screen__tabs-mobile { display: flex; justify-content: center; }
+}
+
 /* Верхний тулбар */
 .bar { display: flex; align-items: center; gap: var(--size-8); }
 .bar__search { flex: 1 1 auto; max-width: 540px; }
-.bar__date { width: var(--control-height-md); height: var(--control-height-md); border: 0; border-radius: var(--radius-sm); background: var(--brand); color: var(--white); cursor: pointer; margin-left: auto; }
+.bar__country { width: 180px; max-width: 100%; }
+/* Кнопка периода — круглая 48×48 (реал dashboard-nav__btn: 50%, brand) */
+.bar__date { width: var(--size-48); height: var(--size-48); border: 0; border-radius: var(--radius-full); background: var(--brand); color: var(--white); cursor: pointer; margin-left: auto; display: inline-flex; align-items: center; justify-content: center; }
+/* Мобайл: тулбар поиска/фильтра/периода уходит в воронку (в ряду табов сводки) */
+@media (max-width: 767.98px) { .bar { display: none; } }
+
+/* Круглая воронка в ряду табов сводки (видна на мобайле через #tabs-action) */
+.bar__funnel {
+    width: var(--control-height-md); height: var(--control-height-md);
+    border: 0; border-radius: var(--radius-full);
+    background: var(--brand); color: var(--white); cursor: pointer;
+}
 
 .periods { display: grid; grid-template-columns: repeat(auto-fit, minmax(calc(var(--size-128) * 2), 1fr)); gap: var(--size-16); }
 .more { display: inline-block; padding: 1px 0; border: 0; border-bottom: 1px dashed var(--brand); background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; }
@@ -247,11 +297,14 @@ function neg(v) { return typeof v === 'string' && v.includes('−'); }
 @media (min-width: 992px) { .chart { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); align-items: start; } }
 .chart__sumlist { margin-top: var(--size-12); }
 
-/* Тулбар таблицы */
-.tbar { display: flex; align-items: flex-end; justify-content: space-between; gap: var(--size-16); flex-wrap: wrap; }
+/* Тулбар таблицы — входит в белую карточку таблицы (реал table-tabs): ряд с разделителем снизу */
+.tbar { display: flex; align-items: center; justify-content: space-between; gap: var(--size-16); flex-wrap: wrap; padding: 0 var(--size-12); border-bottom: 1px solid var(--border-default); }
 .tbar__right { display: flex; align-items: center; gap: var(--size-16); flex-wrap: wrap; }
 .tbar__link { border: 0; background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; display: inline-flex; align-items: center; gap: var(--size-4); }
-.tbar__group { width: 220px; max-width: 100%; }
+/* «Группировать по <значение>» — label + значение-ссылка (реал: без рамки, не селект) */
+.tbar__group { display: inline-flex; align-items: center; gap: var(--size-4); font-size: var(--font-size-body-s); }
+.tbar__group-label { color: var(--text-default); }
+.tbar__group-value { border: 0; background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; display: inline-flex; align-items: center; gap: var(--size-4); }
 
 .more-btn { border: 0; background: transparent; color: var(--text-muted); font-size: var(--font-size-title-m); line-height: 1; cursor: pointer; }
 .more-btn:hover { color: var(--brand); }
