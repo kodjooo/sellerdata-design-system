@@ -16,8 +16,8 @@
 defineProps({
     // Текст подсказки (или используйте слот #content для разметки).
     text: { type: String, default: '' },
-    // Положение: top (default) | bottom.
-    placement: { type: String, default: 'top', validator: (v) => ['top', 'bottom'].includes(v) },
+    // Положение: bottom (default, как Tippy в реале) | top.
+    placement: { type: String, default: 'bottom', validator: (v) => ['top', 'bottom'].includes(v) },
 });
 </script>
 
@@ -34,7 +34,7 @@ defineProps({
     transform: translateX(-50%);
     z-index: var(--z-tooltip);
     width: max-content;
-    max-width: 320px;                 /* реал .tooltip-inner max-width */
+    max-width: 360px;                 /* реал tippy ~350-370 */
     padding: var(--size-8);
     background: var(--surface-default);
     color: var(--text-heading);

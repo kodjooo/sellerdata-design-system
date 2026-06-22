@@ -11,6 +11,10 @@
             class="ds-toast"
             role="status"
             :aria-live="variant === 'danger' ? 'assertive' : 'polite'"
+            :style="swipeX ? { transform: `translateX(${swipeX}px)`, transition: 'none' } : null"
+            @touchstart="onTouchStart"
+            @touchmove="onTouchMove"
+            @touchend="onTouchEnd"
         >
             <button
                 v-if="dismissible"
@@ -42,7 +46,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = defineProps({
     // Семантика → только глиф иконки (в реале цвет иконки нейтральный --dark-grey).
@@ -59,11 +63,32 @@ const props = defineProps({
     dismissible: { type: Boolean, default: true },
     // Видимость (v-model:visible).
     visible: { type: Boolean, default: true },
+    // Закрытие свайпом вправо (мобайл). Порог 100px (жест, не layout).
+    swipeDismiss: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['close', 'update:visible']);
 
 const modelVisible = computed(() => props.visible);
+
+// Свайп-вправо для закрытия (реал AppToast): тянем только вправо, порог 100px.
+const SWIPE_THRESHOLD = 100;
+const touchStartX = ref(0);
+const swipeX = ref(0);
+function onTouchStart(e) {
+    if (!props.swipeDismiss) return;
+    touchStartX.value = e.changedTouches[0].screenX;
+}
+function onTouchMove(e) {
+    if (!props.swipeDismiss) return;
+    const diff = e.changedTouches[0].screenX - touchStartX.value;
+    swipeX.value = Math.max(0, Math.min(diff, 200));
+}
+function onTouchEnd() {
+    if (!props.swipeDismiss) return;
+    if (swipeX.value > SWIPE_THRESHOLD) onClose();
+    swipeX.value = 0;
+}
 
 const variantIcon = computed(
     () =>

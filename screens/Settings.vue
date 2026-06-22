@@ -10,7 +10,7 @@
         <template #actions>
             <span class="fm-help-circle topbar__ico" aria-hidden="true"></span>
             <span class="fm-bell topbar__ico" aria-hidden="true"></span>
-            <DsAccountBadge name="Демо аккаунт" store="Основной Магазин" />
+            <DsAccountBadge data-source="wildberries" name="Демо аккаунт" store="Основной Магазин" />
         </template>
 
         <div class="screen">

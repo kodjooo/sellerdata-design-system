@@ -123,6 +123,13 @@ const props = defineProps({
         type: String,
         default: '',
     },
+    // Встроенная сортировка строк по активной колонке. Пропускается для группированных
+    // таблиц (groupKey) — там порядок строк значим (итоги/секции). false → контролируемый
+    // режим (только эмит 'sort', порядок задаёт родитель).
+    autoSort: {
+        type: Boolean,
+        default: true,
+    },
 });
 
 // Является ли строка группой (по полю groupKey).
@@ -167,6 +174,32 @@ function childrenOf(row) {
     return Array.isArray(ch) ? ch : [];
 }
 
+// Числовое значение ячейки для сортировки (поддержка «440,00 ₽», «1 234», «12 %»).
+function sortValue(row, key, numeric) {
+    const raw = row?.[key];
+    if (numeric) {
+        const n = parseFloat(String(raw ?? '').replace(/\s/g, '').replace(',', '.').replace(/[^\d.-]/g, ''));
+        return Number.isNaN(n) ? -Infinity : n;
+    }
+    return String(raw ?? '').toLowerCase();
+}
+
+// Верхний уровень строк с учётом встроенной сортировки. Для группированных таблиц
+// (groupKey) порядок не трогаем — там секции/итоги значимы.
+const sortedTop = computed(() => {
+    if (!props.autoSort || !sortKey.value || props.groupKey) return props.rows;
+    const col = props.columns.find((c) => c.key === sortKey.value);
+    const numeric = !!col?.numeric;
+    const dir = sortDesc.value ? -1 : 1;
+    return [...props.rows].sort((a, b) => {
+        const va = sortValue(a, sortKey.value, numeric);
+        const vb = sortValue(b, sortKey.value, numeric);
+        if (va < vb) return -1 * dir;
+        if (va > vb) return 1 * dir;
+        return 0;
+    });
+});
+
 // Плоский список видимых строк с глубиной — поддержка РЕКУРСИВНОЙ вложенности
 // (кампания → товар → дата → площадка и т.п.). Видны только потомки, у которых
 // раскрыты все предки.
@@ -183,7 +216,7 @@ const flatRows = computed(() => {
             if (kids.length && expanded) walk(kids, depth + 1);
         }
     };
-    walk(props.rows, 0);
+    walk(sortedTop.value, 0);
     return out;
 });
 

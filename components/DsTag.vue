@@ -13,7 +13,7 @@
  *     цвет статуса + светлый фон (--accent-positive-bg для success).
  * ВНИМАНИЕ: реал имеет РАЗНУЮ форму и размер у solid(13/радиус-4) и soft(12/pill) — это
  * накопившийся разнобой. Извлёк как есть; кандидат на унификацию (единый размер/форма).
- * tone: success | warning | danger | attention | default.
+ * tone: success | warning | danger | attention | default | blue | gray.
  */
 defineProps({
     variant: { type: String, default: 'solid' }, // solid (.status-tag) | soft (.tag)
@@ -42,6 +42,8 @@ defineProps({
 .ds-tag--solid.ds-tag--warning   { background: var(--status-warning); }
 .ds-tag--solid.ds-tag--danger    { background: var(--status-danger); }
 .ds-tag--solid.ds-tag--attention { background: var(--status-attention); }
+.ds-tag--solid.ds-tag--blue      { background: var(--brand); }
+.ds-tag--solid.ds-tag--gray      { background: var(--gray-600); }
 
 /* ─── soft = .tag (дословно) ─── */
 .ds-tag--soft {
@@ -61,4 +63,7 @@ defineProps({
 .ds-tag--soft.ds-tag--warning { color: var(--notice-text-strong); background-color: var(--notice-bg); }
 .ds-tag--soft.ds-tag--danger  { color: var(--status-danger); background-color: var(--status-danger-bg); }
 .ds-tag--soft.ds-tag--default { color: var(--text-muted); background-color: var(--surface-muted); }
+/* blue — информационный/активный статус; gray — нейтральный плотный (реал status-tag_dimmed) */
+.ds-tag--soft.ds-tag--blue { color: var(--brand); background-color: rgb(from var(--brand) r g b / 0.12); }
+.ds-tag--soft.ds-tag--gray { color: var(--text-muted); background-color: var(--gray-100); }
 </style>

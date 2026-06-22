@@ -4,8 +4,12 @@
         имя + магазин. На мобайле (<md) текст скрывается, остаётся аватар.
     -->
     <span class="ds-account">
-        <img v-if="avatar" class="ds-account__avatar ds-account__avatar--img" :src="avatar" :alt="name" />
-        <span v-else class="ds-account__avatar" aria-hidden="true">{{ initial }}</span>
+        <span class="ds-account__thumb">
+            <img v-if="avatar" class="ds-account__avatar ds-account__avatar--img" :src="avatar" :alt="name" />
+            <span v-else class="ds-account__avatar" aria-hidden="true">{{ initial }}</span>
+            <!-- Угловой бейдж маркетплейса (реал .user_thumb_wb/_ozon::after) -->
+            <img v-if="marketIcon" class="ds-account__market" :src="marketIcon" alt="" aria-hidden="true" />
+        </span>
         <span class="ds-account__body">
             <span class="t-label-m ds-account__name">{{ name }}</span>
             <span v-if="store" class="t-caption ds-account__store">{{ store }}</span>
@@ -23,15 +27,28 @@ const props = defineProps({
     store: { type: String, default: '' },
     // URL аватара; без него — буква-инициал.
     avatar: { type: String, default: '' },
+    // Маркетплейс — угловая иконка-бейдж (реал различает магазины именно ею).
+    dataSource: { type: String, default: '', validator: (v) => ['', 'wildberries', 'ozon'].includes(v) },
 });
 
 const initial = computed(() => (props.name ? props.name.trim().charAt(0).toUpperCase() : '?'));
+const marketIcon = computed(() => ({
+    wildberries: '/img/wb-ico.svg',
+    ozon: '/img/ozon-ico.svg',
+}[props.dataSource] || ''));
 </script>
 
 <style lang="scss" scoped>
 @use 'responsive' as *;
 
 .ds-account { display: inline-flex; align-items: center; gap: var(--size-8); min-width: 0; }
+.ds-account__thumb { position: relative; flex: 0 0 auto; display: inline-flex; }
+/* Угловой бейдж маркетплейса в правом-нижнем углу аватара (реал .user_thumb_*::after) */
+.ds-account__market {
+    position: absolute; right: calc(var(--size-2) * -1); bottom: calc(var(--size-2) * -1);
+    width: var(--size-16); height: var(--size-16); border-radius: var(--radius-full);
+    background: var(--white); box-shadow: var(--shadow-card); object-fit: contain;
+}
 .ds-account__avatar {
     flex: 0 0 auto;
     display: inline-flex;
