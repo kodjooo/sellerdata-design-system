@@ -3,7 +3,7 @@
         DsTabs — текстовые вкладки (реал .header-tabs__btn): 13px, активная = brand-текст
         + нижняя brand-полоса (--border-width-accent). Без заливки/pill.
     -->
-    <div class="ds-tabs" role="tablist">
+    <div class="ds-tabs" :class="`ds-tabs--${variant}`" role="tablist">
         <button
             v-for="t in tabs"
             :key="t.key ?? t.label"
@@ -26,6 +26,8 @@ defineProps({
     tabs: { type: Array, default: () => [] },
     // Активная вкладка (v-model) — значение key (или label, если key не задан).
     modelValue: { type: [String, Number], default: '' },
+    // Вид: underline (текст + нижняя полоса, default) | segmented (пилюли, активная — заливка brand).
+    variant: { type: String, default: 'underline', validator: (v) => ['underline', 'segmented'].includes(v) },
 });
 defineEmits(['update:modelValue']);
 </script>
@@ -67,4 +69,22 @@ defineEmits(['update:modelValue']);
 .ds-tabs__tab:focus-visible { outline: none; box-shadow: var(--shadow-input-focus); }
 .ds-tabs__tab.is-active { color: var(--brand); }
 .ds-tabs__tab.is-active::after { opacity: var(--opacity-full); }
+
+/* ─── Сегментный вариант: пилюли в контейнере, активная — заливка brand ─── */
+.ds-tabs--segmented {
+    gap: var(--size-4);
+    padding: var(--size-4);
+    border-bottom: 0;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-full);
+}
+.ds-tabs--segmented .ds-tabs__tab {
+    flex: 1 1 0;
+    justify-content: center;
+    padding: var(--size-12) var(--size-16);
+    border-radius: var(--radius-full);
+}
+.ds-tabs--segmented .ds-tabs__tab::after { display: none; }
+.ds-tabs--segmented .ds-tabs__tab:hover { color: var(--brand); }
+.ds-tabs--segmented .ds-tabs__tab.is-active { background: var(--brand); color: var(--white); }
 </style>

@@ -10,7 +10,7 @@
         <template #actions>
             <span class="fm-help-circle topbar__ico" aria-hidden="true"></span>
             <span class="fm-bell topbar__ico" aria-hidden="true"></span>
-            <DsAccountBadge data-source="wildberries" name="Демо аккаунт" store="Основной магазин" />
+            <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
         </template>
 
         <div class="screen">
@@ -243,7 +243,7 @@ import DsCheckbox from '@/Components/Ds/DsCheckbox.vue';
 import DsTable from '@/Components/Ds/DsTable.vue';
 import DsModal from '@/Components/Ds/DsModal.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
-import DsAccountBadge from '@/Components/Ds/DsAccountBadge.vue';
+import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
 import DsStickyBar from '@/Components/Ds/DsStickyBar.vue';
 

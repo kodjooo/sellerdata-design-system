@@ -11,7 +11,7 @@
         <template #actions>
             <span class="fm-help-circle topbar__ico" aria-hidden="true"></span>
             <span class="fm-bell topbar__ico" aria-hidden="true"></span>
-            <DsAccountBadge data-source="wildberries" name="Демо аккаунт" store="Дополнительный магазин" />
+            <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
         </template>
 
         <div class="screen">
@@ -27,8 +27,23 @@
             <!-- Тулбар фильтров: товары / кампании / типы / статусы + фильтр/сброс.
                  Мобайл: селекты уходят в воронку (full-screen фильтр). -->
             <div class="bar">
-                <DsSelect v-model="fProducts" :options="productOptions" placeholder="Товары" searchable multiple class="bar__select bar__desktop-only" />
-                <DsSelect v-model="fCampaigns" :options="campaignOptions" placeholder="Кампании" searchable multiple class="bar__select bar__desktop-only" />
+                <DsSelect v-model="fProducts" :options="productOptions" placeholder="Товары" searchable multiple show-select-all class="bar__select bar__desktop-only">
+                    <template #option="{ option }">
+                        <DsProductCell :name="option.label" :sub="option.sub" />
+                    </template>
+                </DsSelect>
+                <DsSelect v-model="fCampaigns" :options="campaignOptions" placeholder="Кампании" searchable multiple show-select-all class="bar__select bar__desktop-only">
+                    <!-- Опция-кампания: название + ID/тип + статус-тег (реал-дропдаун) -->
+                    <template #option="{ option }">
+                        <span class="camp-opt">
+                            <span class="camp-opt__body">
+                                <span class="t-body-s camp-opt__name">{{ option.label }}</span>
+                                <span class="t-caption camp-opt__sub">{{ option.sub }}</span>
+                            </span>
+                            <DsTag variant="soft" :tone="option.tone">{{ option.status }}</DsTag>
+                        </span>
+                    </template>
+                </DsSelect>
                 <DsSelect v-model="fTypes" :options="typeOptions" placeholder="Все типы" class="bar__select bar__select_sm bar__desktop-only" />
                 <DsSelect v-model="fStatuses" :options="statusOptions" placeholder="Все статусы" class="bar__select bar__select_sm bar__desktop-only" />
                 <DsButton variant="secondary" class="bar__desktop-only"><template #iconLeft>⚲</template>Фильтр</DsButton>
@@ -111,11 +126,12 @@ import DsIconButton from '@/Components/Ds/DsIconButton.vue';
 import DsSelect from '@/Components/Ds/DsSelect.vue';
 import DsTable from '@/Components/Ds/DsTable.vue';
 import DsTag from '@/Components/Ds/DsTag.vue';
+import DsProductCell from '@/Components/Ds/DsProductCell.vue';
 import DsCopyButton from '@/Components/Ds/DsCopyButton.vue';
 import DsPagination from '@/Components/Ds/DsPagination.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
-import DsAccountBadge from '@/Components/Ds/DsAccountBadge.vue';
+import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
 
 // Сайдбар — те же иконки, что и в Dashboard-эталоне (сверены с Authenticated.vue).
 const nav = [
@@ -139,18 +155,18 @@ const fTypes = ref(null);
 const fStatuses = ref(null);
 // Примерные опции — чтобы клик по селектору показывал список (как в реале).
 const productOptions = [
-    'Ночная сорочка больших размеров',
-    'Ночная сорочка больших размеров с кружевом',
-    'Сорочки срс',
-    'Пеньюар с халатом комплект кружево',
-    'Комплект халат и пеньюар кружево',
+    { value: 'p1', label: 'Автомобильное зарядное устройство', sub: '324734 / 94680610' },
+    { value: 'p2', label: 'Автомобильное зарядное устройство', sub: '306649 / 16722269' },
+    { value: 'p3', label: 'Автомобильное зарядное устройство', sub: '449868 / 41845121' },
+    { value: 'p4', label: 'Антисептик', sub: '512033 / 77001234' },
+    { value: 'p5', label: 'Скотч', sub: '618210 / 55012398' },
 ];
 const campaignOptions = [
-    'Кампания от 19.06.2026',
-    'Кампания от 13.06.2026',
-    'Кампания от 10.06.2026',
-    'Кампания от 09.06.2026',
-    'Сорочки срс',
+    { value: 'c1', label: 'Бируши', sub: 'ID 8677744 / Оплата за показы', status: 'Идут показы', tone: 'success' },
+    { value: 'c2', label: 'Мыльный дозатор', sub: 'ID 6510138 / Оплата за показы', status: 'Идут показы', tone: 'success' },
+    { value: 'c3', label: 'Скотч', sub: 'ID 5577711 / Оплата за показы', status: 'Идут показы', tone: 'success' },
+    { value: 'c4', label: 'Чехол для чемодана', sub: 'ID 4137599 / Оплата за показы', status: 'Завершено', tone: 'gray' },
+    { value: 'c5', label: 'Овощечистка', sub: 'ID 6819022 / Оплата за показы', status: 'Пауза', tone: 'gray' },
 ];
 
 // Мобильный фильтр (full-screen лист): селекты с десктоп-тулбара.
@@ -245,7 +261,13 @@ function dim(v) { return v === '-' ? 'muted' : null; }
 /* Поиск-селекты Товары/Кампании заполняют ряд (реал ≈425px, flex-grow без cap) */
 .bar__select { flex: 1 1 280px; }
 /* Типы/Статусы — компактные (реал 120-140px) */
-.bar__select_sm { flex: 0 1 150px; }
+.bar__select_sm { flex: 0 1 138px; }
+
+/* Опция-кампания в дропдауне: имя+ID слева, статус-тег справа */
+.camp-opt { display: flex; align-items: center; justify-content: space-between; gap: var(--size-12); width: 100%; min-width: 0; }
+.camp-opt__body { display: flex; flex-direction: column; min-width: 0; gap: var(--size-2); }
+.camp-opt__name { color: var(--text-heading); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.camp-opt__sub { color: var(--text-muted); }
 
 /* Круглая воронка (мобайл) — открывает full-screen фильтр */
 .bar__funnel {

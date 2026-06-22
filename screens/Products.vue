@@ -10,7 +10,7 @@
         <template #actions>
             <span class="fm-help-circle topbar__ico" aria-hidden="true"></span>
             <span class="fm-bell topbar__ico" aria-hidden="true"></span>
-            <DsAccountBadge data-source="wildberries" name="Демо аккаунт" store="Wildberries" />
+            <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
         </template>
 
         <div class="screen">
@@ -31,8 +31,15 @@
                     :options="searchOptions"
                     placeholder="Поиск по имени, баркоду или артикулу"
                     searchable
+                    multiple
+                    show-select-all
                     class="bar__search bar__desktop-only"
-                />
+                >
+                    <!-- Опция-товар: миниатюра + название + nmId/артикул (реал-дропдаун) -->
+                    <template #option="{ option }">
+                        <DsProductCell :name="option.label" :sub="option.sub" />
+                    </template>
+                </DsSelect>
                 <DsButton variant="secondary" class="bar__desktop-only"><template #iconLeft>⚲</template>Фильтр</DsButton>
                 <DsCheckbox v-model="onlyEmptyCost" label="Без себестоимости" class="bar__cost bar__desktop-only" />
                 <DsIconButton icon="fm-filter" aria-label="Фильтр" class="bar__mobile-only" @click="filterOpen = true" />
@@ -154,7 +161,7 @@ import DsPagination from '@/Components/Ds/DsPagination.vue';
 import DsProductCell from '@/Components/Ds/DsProductCell.vue';
 import DsCopyButton from '@/Components/Ds/DsCopyButton.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
-import DsAccountBadge from '@/Components/Ds/DsAccountBadge.vue';
+import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
 import DsStickyBar from '@/Components/Ds/DsStickyBar.vue';
 
@@ -170,7 +177,7 @@ const nav = [
 ];
 
 const hintOpen = ref(true);
-const search = ref(null);
+const search = ref([]);
 const onlyEmptyCost = ref(false);
 const allSelected = ref(false);
 const selected = ref([]);
@@ -240,7 +247,7 @@ const searchOptions = rows.map(r => ({ value: r.nmId, label: r.title, sub: `${r.
 
 /* Верхний тулбар */
 .bar { display: flex; align-items: center; gap: var(--size-8); flex-wrap: wrap; }
-.bar__search { flex: 1 1 auto; max-width: 540px; }
+.bar__search { flex: 1 1 auto; max-width: 640px; }
 .bar__cost { margin-left: auto; }
 
 /* Круглая воронка (мобайл) — открывает full-screen фильтр */

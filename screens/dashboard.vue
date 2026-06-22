@@ -11,13 +11,13 @@
         <template #actions>
             <span class="fm-help-circle topbar__ico" aria-hidden="true"></span>
             <span class="fm-bell topbar__ico" aria-hidden="true"></span>
-            <DsAccountBadge data-source="wildberries" name="Демо аккаунт" store="Дополнительный магазин" />
+            <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
         </template>
 
         <div class="screen">
             <!-- Вкладки Плитки/Диаграмма: на мобайле отдельной центрированной строкой (реал),
                  на десктопе — в топбаре рядом с заголовком (см. #title). -->
-            <DsTabs v-model="view" :tabs="views" class="screen__tabs-mobile" />
+            <DsTabs v-model="view" :tabs="views" variant="segmented" class="screen__tabs-mobile" />
 
             <!-- Онбординг-баннер -->
             <DsNotice v-model:visible="hintOpen" tone="plain" collapse-mobile>
@@ -30,7 +30,11 @@
 
             <!-- Верхний тулбар: поиск + фильтр + период (десктоп). Мобайл: уходит в воронку. -->
             <div class="bar">
-                <DsSelect v-model="search" :options="searchOptions" placeholder="Товары" searchable class="bar__search" />
+                <DsSelect v-model="search" :options="searchOptions" placeholder="Товары" searchable multiple show-select-all class="bar__search">
+                    <template #option="{ option }">
+                        <DsProductCell :name="option.label" :sub="option.sub" />
+                    </template>
+                </DsSelect>
                 <DsSelect v-model="country" :options="countries" placeholder="Все страны" :show-footer="false" class="bar__country" />
                 <DsButton variant="secondary"><template #iconLeft>⚲</template>Фильтр</DsButton>
                 <DsIconButton icon="fm-calendar" size="lg" aria-label="Период" class="bar__date" />
@@ -120,7 +124,7 @@ import DsPagination from '@/Components/Ds/DsPagination.vue';
 import DsProductCell from '@/Components/Ds/DsProductCell.vue';
 import DsInfoList from '@/Components/Ds/DsInfoList.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
-import DsAccountBadge from '@/Components/Ds/DsAccountBadge.vue';
+import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
 
 // Иконки сверены с реальным сайдбаром (Authenticated.vue).
@@ -137,8 +141,14 @@ const nav = [
 const hintOpen = ref(true);
 const view = ref('grid');
 const views = [{ key: 'grid', label: 'Плитки', icon: 'fm-grid' }, { key: 'chart', label: 'Диаграмма', icon: 'fm-trending-up' }];
-const search = ref(null);
-const searchOptions = ['Капли для носа', 'Масло для массажа', 'Маска для сна', 'Соска-пустышка', 'Штора для душа', 'Ночная сорочка больших размеров'];
+const search = ref([]);
+const searchOptions = [
+    { value: 'd1', label: 'Капли для носа', sub: '200405 / NOSE-01' },
+    { value: 'd2', label: 'Масло для массажа', sub: '325546 / OIL-02' },
+    { value: 'd3', label: 'Маска для сна', sub: '116018 / MASK-03' },
+    { value: 'd4', label: 'Соска-пустышка', sub: '156004 / SOSKA-01' },
+    { value: 'd5', label: 'Штора для душа', sub: '202301 / SHTORA-02' },
+];
 const country = ref(null);
 const countries = ['Все страны', 'Россия', 'Беларусь', 'Казахстан', 'Армения', 'Киргизия'];
 
@@ -277,8 +287,8 @@ function neg(v) { return typeof v === 'string' && v.includes('−'); }
 
 /* Верхний тулбар */
 .bar { display: flex; align-items: center; gap: var(--size-8); }
-.bar__search { flex: 1 1 auto; max-width: 540px; }
-.bar__country { width: 180px; max-width: 100%; }
+.bar__search { flex: 1 1 auto; max-width: 640px; }
+.bar__country { width: 140px; max-width: 100%; }
 /* Кнопка периода — круглая 48×48 (реал dashboard-nav__btn: 50%, brand) */
 .bar__date { width: var(--size-48); height: var(--size-48); border: 0; border-radius: var(--radius-full); background: var(--brand); color: var(--white); cursor: pointer; margin-left: auto; display: inline-flex; align-items: center; justify-content: center; }
 /* Мобайл: тулбар поиска/фильтра/периода уходит в воронку (в ряду табов сводки) */

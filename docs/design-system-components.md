@@ -39,6 +39,7 @@
 | **DsErrorPage** | `code`, `title`, `description` + слоты #actions/#image | каркас страницы ошибки 404/503: лого, код+заголовок, описание, действия, иллюстрация | `resources/js/Components/Ds/DsErrorPage.vue` |
 | **DsServiceBanner** | `message`, `seconds`, `retryLabel`, `tone` warning\|danger | плашка «сервис недоступен» + таймер обратного отсчёта + retry | `resources/js/Components/Ds/DsServiceBanner.vue` |
 | **DsPopover** | `placement`, `open` (v-model:open) | универсальный поповер (teleport): триггер + панель #content; закрытие по клику-вне/Esc | `resources/js/Components/Ds/DsPopover.vue` |
+| **DsAccountMenu** | `name`, `store`, `dataSource`, `stores` [{id,name,dataSource}], `activeId` | переключатель аккаунта/магазина в топбаре: бейдж+шеврон → поповер со списком магазинов (иконка МП), Сводный дэшборд, Добавить магазин, Выйти | `resources/js/Components/Ds/DsAccountMenu.vue` |
 | **DsToast** | `variant` info\|success\|warning\|danger (def info), `title`, `position` 6 углов (def top-right), `dismissible` (def true), `visible` (v-model:visible) | info/success/warning/danger (accent), hidden/visible, close hover/focus, reduced-motion, появление top/bottom | `resources/js/Components/Ds/DsToast.vue` |
 | **DsCheckbox** | `modelValue` (v-model: Boolean\|Array\|radio-value), `type` checkbox\|radio (def checkbox), `size` sm\|md (def md), `value`, `label`, `name`, `indeterminate`, `disabled`, `required`, `error`, `id` | unchecked, checked, indeterminate (cb), disabled, focus, hover, error | `resources/js/Components/Ds/DsCheckbox.vue` |
 | **DsPagination** | `page` (def 1), `total` (def 0), `perPage` (def 20), `siblingCount` (def 1) | default, hover, focus, active (заливка brand), active:hover, nav prev/next, nav disabled, ellipsis | `resources/js/Components/Ds/DsPagination.vue` |
@@ -80,6 +81,7 @@
 - **DsErrorPage** — slots: `actions`, `image`. Композирует DsButton.
 - **DsServiceBanner** — без slots. Emits: `retry`. Композирует DsButton.
 - **DsPopover** — slots: default (триггер), `content` (scoped `{ close }`). Emits: `update:open`. Expose: `close()`.
+- **DsAccountMenu** — без slots. Emits: `select(store)`, `summary`, `add-store`, `logout`. Композирует DsPopover/DsAccountBadge.
 - **DsInfoList** — без slots (строки через `items`). Проп `flat` — плоский список без аккордеона (сводка дашборда). `DsTag` soft-success: текст `--accent-positive` (green-600), не teal.
 - **DsToast** — slots: `icon`, default. Emits: `close`, `update:visible`.
 - **DsCheckbox** — slot: default. Emits: `update:modelValue`, `change`, `focus`, `blur`. Expose: `focus()`/`blur()`.

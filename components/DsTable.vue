@@ -494,10 +494,11 @@ defineExpose({ openDetail });
     color: var(--text-default);
 }
 
-/* Ячейки: плотный паддинг (table-specific exceptions, ~5px по горизонтали). */
+/* Ячейки: вертикальный паддинг просторнее (реал-строки ~79px с миниатюрой 40px),
+   горизонтальный — плотный (~8px). Шапка переопределяет вертикаль на --size-8 ниже. */
 .ds-table__th,
 .ds-table__td {
-    padding: var(--size-6) var(--size-8);
+    padding: var(--size-16) var(--size-8);
     border-bottom: 1px solid var(--border-default);
     line-height: var(--line-height-tight);
 }

@@ -10,7 +10,7 @@
         <template #actions>
             <span class="fm-help-circle topbar__ico" aria-hidden="true"></span>
             <span class="fm-bell topbar__ico" aria-hidden="true"></span>
-            <DsAccountBadge data-source="wildberries" name="Демо аккаунт" store="Дополнительный магазин" />
+            <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
         </template>
 
         <div class="screen">
@@ -25,7 +25,11 @@
 
             <!-- Верхний тулбар: поиск товаров + выбор складов + FBO/FBS + фильтр -->
             <div class="bar">
-                <DsSelect v-model="search" :options="[]" placeholder="Товары" searchable class="bar__search" />
+                <DsSelect v-model="search" :options="searchOptions" placeholder="Товары" searchable multiple show-select-all class="bar__search">
+                    <template #option="{ option }">
+                        <DsProductCell :name="option.label" :sub="option.sub" />
+                    </template>
+                </DsSelect>
                 <DsSelect v-model="warehouse" :options="warehouses" placeholder="Все склады" class="bar__select" />
                 <DsSelect v-model="stockType" :options="stockTypes" placeholder="FBO/FBS" :show-footer="false" class="bar__select" />
                 <DsButton variant="secondary"><template #iconLeft>⚲</template>Фильтр</DsButton>
@@ -38,13 +42,11 @@
                 </template>
             </DsSummaryCarousel>
 
-            <!-- Тулбар таблицы: «Группировать по» (только WB) -->
-            <div class="tbar">
-                <DsSelect v-model="group" :options="groups" placeholder="Группировать по" :show-footer="false" class="tbar__group" />
-            </div>
-
-            <!-- Таблица остатков FBO/FBS -->
+            <!-- Таблица остатков FBO/FBS — «Группировать по» входит в карточку (часть таблицы) -->
             <DsCard radius="md" padding="--size-2" bleed-mobile>
+                <div class="tbar">
+                    <DsSelect v-model="group" :options="groups" placeholder="Группировать по" :show-footer="false" class="tbar__group" />
+                </div>
                 <DsTable
                     :columns="cols" :rows="rows" row-key="id" expandable default-sort-key="quantity"
                     mobile-mode="compact"
@@ -126,7 +128,7 @@ import DsTag from '@/Components/Ds/DsTag.vue';
 import DsPagination from '@/Components/Ds/DsPagination.vue';
 import DsProductCell from '@/Components/Ds/DsProductCell.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
-import DsAccountBadge from '@/Components/Ds/DsAccountBadge.vue';
+import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
 
 // Иконки сверены с реальным сайдбаром (Authenticated.vue) — как в Screens/Dashboard.vue.
@@ -141,7 +143,7 @@ const nav = [
 ];
 
 const hintOpen = ref(true);
-const search = ref(null);
+const search = ref([]);
 const warehouse = ref(null);
 const warehouses = ['Коледино', 'Электросталь', 'Казань', 'Тула'];
 const stockType = ref(null);
@@ -217,6 +219,9 @@ const rows = [
     { id: 8, name: 'Ночная сорочка больших размеров', nm: '261418822', sku: '2041214334268 / FBO', quantity: '31', reserved: '0', warehouseCost: '0,00 ₽', salesSpeed: '0', quantityDays: '0', intermediate: '', purchase: '', orderDays: '', nextOrderDays: '0', recommend: '—', roi: '0,00 %' },
 ];
 
+// Опции поиска «Товары» — из строк (клик показывает богатый список, как в реале).
+const searchOptions = rows.map(r => ({ value: r.nm + r.sku, label: r.name, sub: r.sku }));
+
 // Раскраска «дней» — 1:1 с реальным WarehouseProductsTableRowChild.vue:
 // тег появляется только в зоне риска, нормальный остаток — просто текст без фона.
 const num = (v) => Number(String(v).replace(/[^\d.-]/g, ''));
@@ -253,8 +258,8 @@ function nextOrderDaysTone(row) {
 
 /* Верхний тулбар */
 .bar { display: flex; align-items: center; gap: var(--size-8); flex-wrap: wrap; }
-.bar__search { flex: 1 1 auto; max-width: 540px; }
-.bar__select { width: 200px; max-width: 100%; }
+.bar__search { flex: 1 1 auto; max-width: 640px; }
+.bar__select { width: 140px; max-width: 100%; }
 /* Мобайл: селекты-фильтры уходят в full-screen воронку (реал), на странице — только сводка/таблица */
 @media (max-width: 767.98px) { .bar { display: none; } }
 
@@ -265,8 +270,8 @@ function nextOrderDaysTone(row) {
     background: var(--brand); color: var(--white); cursor: pointer;
 }
 
-/* Тулбар таблицы — «Группировать по» прижато вправо (реал) */
-.tbar { display: flex; align-items: center; justify-content: flex-end; gap: var(--size-16); flex-wrap: wrap; }
+/* Тулбар таблицы внутри карточки — «Группировать по» прижато вправо, разделитель снизу (реал) */
+.tbar { display: flex; align-items: center; justify-content: flex-end; gap: var(--size-16); flex-wrap: wrap; padding: var(--size-8) var(--size-12); border-bottom: 1px solid var(--border-default); }
 .tbar__group { width: 220px; max-width: 100%; }
 
 .tfoot { display: flex; justify-content: center; }
