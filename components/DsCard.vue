@@ -11,7 +11,7 @@
         :class="[
             `ds-card--r-${radius}`,
             `ds-card--sh-${shadow}`,
-            { 'ds-card--has-header': hasHeader, 'ds-card--has-footer': hasFooter },
+            { 'ds-card--has-header': hasHeader, 'ds-card--has-footer': hasFooter, 'ds-card--bleed-mobile': bleedMobile },
         ]"
         :style="cardStyle"
     >
@@ -58,6 +58,13 @@ const props = defineProps({
         type: String,
         default: 'section',
     },
+    // На мобайле (<md) карточка выходит на всю ширину вьюпорта (full-bleed): убирает
+    // боковой паддинг страницы (отрицательный margin), радиус и боковые границы.
+    // Реал: таблицы в кабинете на мобайле — edge-to-edge.
+    bleedMobile: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 const slots = useSlots();
@@ -87,6 +94,17 @@ const cardStyle = computed(() => ({ '--ds-card-padding': `var(${props.padding})`
 /* ─── Радиус ──────────────────────────────────────────────────── */
 .ds-card--r-md { border-radius: var(--radius-md); }
 .ds-card--r-lg { border-radius: var(--radius-lg); }
+
+/* ─── Full-bleed на мобайле: таблица во всю ширину (как в реале ЛК) ─── */
+@include respond-below(md) {
+    .ds-card--bleed-mobile {
+        /* отрицательный margin = боковой паддинг контента AppShell (--size-16) */
+        margin-inline: calc(var(--size-16) * -1);
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+    }
+}
 
 /* ─── Тень ────────────────────────────────────────────────────── */
 .ds-card--sh-card    { box-shadow: var(--shadow-card); }

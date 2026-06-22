@@ -45,7 +45,7 @@
             </div>
 
             <!-- Таблица расходов с группировкой по месяцам (строка-итог «Всего в …») -->
-            <DsCard radius="md" padding="--size-2">
+            <DsCard radius="md" padding="--size-2" bleed-mobile>
                 <DsTable
                     :columns="cols"
                     :rows="rows"

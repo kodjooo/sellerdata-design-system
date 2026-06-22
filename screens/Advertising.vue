@@ -27,8 +27,8 @@
             <!-- Тулбар фильтров: товары / кампании / типы / статусы + фильтр/сброс.
                  Мобайл: селекты уходят в воронку (full-screen фильтр). -->
             <div class="bar">
-                <DsSelect v-model="fProducts" :options="[]" placeholder="Товары" searchable class="bar__select bar__desktop-only" />
-                <DsSelect v-model="fCampaigns" :options="[]" placeholder="Кампании" searchable class="bar__select bar__desktop-only" />
+                <DsSelect v-model="fProducts" :options="productOptions" placeholder="Товары" searchable multiple class="bar__select bar__desktop-only" />
+                <DsSelect v-model="fCampaigns" :options="campaignOptions" placeholder="Кампании" searchable multiple class="bar__select bar__desktop-only" />
                 <DsSelect v-model="fTypes" :options="typeOptions" placeholder="Все типы" class="bar__select bar__select_sm bar__desktop-only" />
                 <DsSelect v-model="fStatuses" :options="statusOptions" placeholder="Все статусы" class="bar__select bar__select_sm bar__desktop-only" />
                 <DsButton variant="secondary" class="bar__desktop-only"><template #iconLeft>⚲</template>Фильтр</DsButton>
@@ -36,7 +36,7 @@
             </div>
 
             <!-- МНОГОУРОВНЕВАЯ ТАБЛИЦА: кампания → товар → дата -->
-            <DsCard radius="md" padding="--size-2">
+            <DsCard radius="md" padding="--size-2" bleed-mobile>
                 <DsTable
                     :columns="cols"
                     :rows="rows"
@@ -133,10 +133,25 @@ const tab = ref('products');
 const tabs = [{ key: 'products', label: 'Товары' }, { key: 'media', label: 'Медийная' }];
 
 // Фильтры (визуальный каркас тулбара — как в реале WB).
-const fProducts = ref(null);
-const fCampaigns = ref(null);
+const fProducts = ref([]);
+const fCampaigns = ref([]);
 const fTypes = ref(null);
 const fStatuses = ref(null);
+// Примерные опции — чтобы клик по селектору показывал список (как в реале).
+const productOptions = [
+    'Ночная сорочка больших размеров',
+    'Ночная сорочка больших размеров с кружевом',
+    'Сорочки срс',
+    'Пеньюар с халатом комплект кружево',
+    'Комплект халат и пеньюар кружево',
+];
+const campaignOptions = [
+    'Кампания от 19.06.2026',
+    'Кампания от 13.06.2026',
+    'Кампания от 10.06.2026',
+    'Кампания от 09.06.2026',
+    'Сорочки срс',
+];
 
 // Мобильный фильтр (full-screen лист): селекты с десктоп-тулбара.
 const filterOpen = ref(false);
@@ -227,8 +242,10 @@ function dim(v) { return v === '-' ? 'muted' : null; }
 
 /* Тулбар фильтров */
 .bar { display: flex; align-items: center; gap: var(--size-8); flex-wrap: wrap; }
-.bar__select { flex: 1 1 180px; max-width: 320px; }
-.bar__select_sm { flex: 0 1 180px; }
+/* Поиск-селекты Товары/Кампании заполняют ряд (реал ≈425px, flex-grow без cap) */
+.bar__select { flex: 1 1 280px; }
+/* Типы/Статусы — компактные (реал 120-140px) */
+.bar__select_sm { flex: 0 1 150px; }
 
 /* Круглая воронка (мобайл) — открывает full-screen фильтр */
 .bar__funnel {

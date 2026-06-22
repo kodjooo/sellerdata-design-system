@@ -28,7 +28,7 @@
             <div class="bar">
                 <DsSelect
                     v-model="search"
-                    :options="[]"
+                    :options="searchOptions"
                     placeholder="Поиск по имени, баркоду или артикулу"
                     searchable
                     class="bar__search bar__desktop-only"
@@ -39,7 +39,7 @@
             </div>
 
             <!-- Таблица товаров -->
-            <DsCard radius="md" padding="--size-2">
+            <DsCard radius="md" padding="--size-2" bleed-mobile>
                 <DsTable
                     :columns="cols"
                     :rows="rows"
@@ -221,6 +221,9 @@ const rows = [
     ...r,
     children: [{ id: r.id + 'a', isVariant: true, barcode: String(2040000000000 + r.nmId), size: '', cost: r.cost, type: r.type, comment: '' }],
 }));
+
+// Опции поиска «Товары» — из строк таблицы (клик показывает список, как в реале).
+const searchOptions = rows.map(r => ({ value: r.nmId, label: r.title, sub: `${r.nmId} / ${r.article}` }));
 </script>
 
 <style scoped>

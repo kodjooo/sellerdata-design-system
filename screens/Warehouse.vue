@@ -44,7 +44,7 @@
             </div>
 
             <!-- Таблица остатков FBO/FBS -->
-            <DsCard radius="md" padding="--size-2">
+            <DsCard radius="md" padding="--size-2" bleed-mobile>
                 <DsTable
                     :columns="cols" :rows="rows" row-key="id" expandable default-sort-key="quantity"
                     mobile-mode="compact"

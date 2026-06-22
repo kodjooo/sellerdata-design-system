@@ -30,7 +30,7 @@
 
             <!-- Верхний тулбар: поиск + фильтр + период (десктоп). Мобайл: уходит в воронку. -->
             <div class="bar">
-                <DsSelect v-model="search" :options="[]" placeholder="Товары" searchable class="bar__search" />
+                <DsSelect v-model="search" :options="searchOptions" placeholder="Товары" searchable class="bar__search" />
                 <DsSelect v-model="country" :options="countries" placeholder="Все страны" :show-footer="false" class="bar__country" />
                 <DsButton variant="secondary"><template #iconLeft>⚲</template>Фильтр</DsButton>
                 <DsIconButton icon="fm-calendar" size="lg" aria-label="Период" class="bar__date" />
@@ -53,7 +53,7 @@
             </div>
 
             <!-- ТАБЛИЦА ТОВАРОВ — тулбар (табы/действия) ВХОДИТ в белую карточку таблицы (реал table-tabs) -->
-            <DsCard radius="md" padding="--size-2">
+            <DsCard radius="md" padding="--size-2" bleed-mobile>
                 <div class="tbar">
                     <DsTabs v-model="metric" :tabs="metricTabs" />
                     <div class="tbar__right">
@@ -138,6 +138,7 @@ const hintOpen = ref(true);
 const view = ref('grid');
 const views = [{ key: 'grid', label: 'Плитки', icon: 'fm-grid' }, { key: 'chart', label: 'Диаграмма', icon: 'fm-trending-up' }];
 const search = ref(null);
+const searchOptions = ['Капли для носа', 'Масло для массажа', 'Маска для сна', 'Соска-пустышка', 'Штора для душа', 'Ночная сорочка больших размеров'];
 const country = ref(null);
 const countries = ['Все страны', 'Россия', 'Беларусь', 'Казахстан', 'Армения', 'Киргизия'];
 

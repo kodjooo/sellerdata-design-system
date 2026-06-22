@@ -287,7 +287,7 @@ export const TEXT_STYLES = [
                 figmaName: 'Heading / L', cssClass: 't-heading-l',
                 size: '24px', weight: 600, lineHeight: 1.2,
                 short: SAMPLE_SHORT, long: SAMPLE_LONG,
-                when: 'Шапки модалок, заголовки крупных секций на странице.',
+                when: 'Заголовки крупных секций на странице, лендинг, заголовки верхнего уровня (24px). НЕ шапки модалок — там t-title-m (16/700).',
             },
             {
                 figmaName: 'Heading / M', cssClass: 't-heading-m',
@@ -304,7 +304,7 @@ export const TEXT_STYLES = [
                 figmaName: 'Title', cssClass: 't-title-m',
                 size: '16px', weight: 700, lineHeight: 1.2,
                 short: SAMPLE_SHORT, long: SAMPLE_LONG,
-                when: 'Page title в шапке приложения, особо важные заголовки. Bold 700 на той же 16px-базе что и Body.',
+                when: 'Page title в шапке приложения И шапки модалок (.modal-title 16/700), особо важные заголовки. Bold 700 на той же 16px-базе что и Body.',
             },
         ],
     },
