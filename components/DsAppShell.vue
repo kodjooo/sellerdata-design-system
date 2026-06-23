@@ -161,7 +161,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEsc));
     flex-direction: column;
     align-items: stretch;
     gap: var(--size-4);
-    width: var(--size-96);
+    width: calc(var(--size-96) + var(--size-4));  /* реал rail = 100px */
     padding: var(--size-12) var(--size-6);
     background: var(--surface-default);
     box-shadow: var(--shadow-aside);
@@ -175,7 +175,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEsc));
     @include respond-to(lg) {
         position: sticky;
         height: 100vh;
-        flex: 0 0 var(--size-96);
+        flex: 0 0 calc(var(--size-96) + var(--size-4));
         transform: none;
     }
 }
@@ -203,8 +203,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEsc));
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--size-4);
-    padding: var(--size-8) var(--size-4);
+    gap: var(--size-8);
+    padding: var(--size-16) var(--size-4);   /* реал: пункт ~91px высотой */
     border-radius: var(--radius-lg);
     color: var(--text-default);
     text-decoration: none;
@@ -212,7 +212,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEsc));
     transition: background-color var(--transition-base) var(--ease-standard),
                 color var(--transition-base) var(--ease-standard);
 }
-.ds-app-shell__nav-icon { font-size: var(--font-size-heading-m); line-height: var(--line-height-tight); }
+.ds-app-shell__nav-icon { font-size: var(--font-size-heading-l); line-height: var(--line-height-tight); }
 .ds-app-shell__nav-label { color: inherit; }
 .ds-app-shell__nav-item:hover { background: var(--surface-muted); color: var(--text-heading); }
 .ds-app-shell__nav-item:focus-visible { outline: none; box-shadow: var(--shadow-input-focus); }
@@ -250,7 +250,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEsc));
     background: var(--surface-default);
     border-bottom: 1px solid var(--border-default);
 
-    @include respond-to(md) { padding: var(--size-12) var(--size-24); }
+    @include respond-to(md) { padding: var(--size-12) var(--size-20); }
 }
 
 /* Гамбургер — только <lg (сайдбар скрыт). */
@@ -288,7 +288,8 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEsc));
     gap: var(--size-16);
     padding: var(--size-16);
 
+    /* Реал: контент в ~20px от края (паддинг 20 на блоках), без раздувания до 40. */
     @include respond-to(md) { padding: var(--size-24); }
-    @include respond-to(lg) { padding: var(--size-40); }
+    @include respond-to(lg) { padding: var(--size-24); }
 }
 </style>

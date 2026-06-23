@@ -64,7 +64,21 @@
                         <button type="button" class="tbar__link fm-download"> Скачать таблицу (.xls)</button>
                         <span class="tbar__group">
                             <span class="tbar__group-label">Группировать по</span>
-                            <button type="button" class="tbar__group-value">{{ group }}<span class="fm-chevron-down" aria-hidden="true"></span></button>
+                            <DsPopover placement="bottom-end">
+                                <button type="button" class="tbar__group-value">{{ group }}<span class="fm-chevron-down" aria-hidden="true"></span></button>
+                                <template #content="{ close }">
+                                    <div class="group-menu">
+                                        <button
+                                            v-for="g in groups"
+                                            :key="g"
+                                            type="button"
+                                            class="group-menu__item"
+                                            :class="{ 'is-active': g === group }"
+                                            @click="group = g; close();"
+                                        >{{ g }}</button>
+                                    </div>
+                                </template>
+                            </DsPopover>
                         </span>
                     </div>
                 </div>
@@ -126,6 +140,7 @@ import DsInfoList from '@/Components/Ds/DsInfoList.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
 import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
+import DsPopover from '@/Components/Ds/DsPopover.vue';
 
 // Иконки сверены с реальным сайдбаром (Authenticated.vue).
 const nav = [
@@ -261,7 +276,7 @@ const brandGroups = [
 ];
 
 // Итоговый набор строк зависит от выбора «Группировать по».
-const rows = computed(() => (group.value === 'Бренду' || group.value === 'Артикулу' ? brandGroups : products));
+const rows = computed(() => (group.value === 'Бренду' ? brandGroups : products));
 
 function neg(v) { return typeof v === 'string' && v.includes('−'); }
 </script>
@@ -316,6 +331,11 @@ function neg(v) { return typeof v === 'string' && v.includes('−'); }
 .tbar__group { display: inline-flex; align-items: center; gap: var(--size-4); font-size: var(--font-size-body-s); }
 .tbar__group-label { color: var(--text-default); }
 .tbar__group-value { border: 0; background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; display: inline-flex; align-items: center; gap: var(--size-4); }
+/* Меню выбора группировки (поповер) */
+.group-menu { display: flex; flex-direction: column; min-width: calc(var(--size-128) * 1.2); }
+.group-menu__item { display: block; width: 100%; padding: var(--size-8) var(--size-12); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-default); text-align: left; cursor: pointer; font-size: var(--font-size-body-s); }
+.group-menu__item:hover { background: var(--surface-muted); }
+.group-menu__item.is-active { color: var(--brand); font-weight: var(--font-weight-semibold); }
 
 .more-btn { border: 0; background: transparent; color: var(--text-muted); font-size: var(--font-size-title-m); line-height: 1; cursor: pointer; }
 .more-btn:hover { color: var(--brand); }

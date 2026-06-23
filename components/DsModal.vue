@@ -152,9 +152,9 @@ onBeforeUnmount(() => {
 
 /* Размеры окна — действуют от md (на мобайле всегда fullscreen). */
 @include respond-to(md) {
-    .ds-modal--sm { max-width: calc(var(--size-128) * 2.5); }   /* 320 */
-    .ds-modal--md { max-width: 460px; }   /* real .modal-basic max-width: rem(460) */
-    .ds-modal--lg { max-width: calc(var(--size-128) * 5); }     /* 640 */
+    .ds-modal--sm { max-width: 460px; }   /* real .modal-basic (≥576): rem(460) */
+    .ds-modal--md { max-width: 600px; }   /* real .modal-basic (≥768): rem(600) — было 460, узко */
+    .ds-modal--lg { max-width: 720px; }
 }
 
 /* Fullscreen — на весь экран и на десктопе. */

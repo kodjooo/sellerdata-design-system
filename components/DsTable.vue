@@ -500,8 +500,12 @@ defineExpose({ openDetail });
 .ds-table__td {
     padding: var(--size-16) var(--size-8);
     border-bottom: 1px solid var(--border-default);
+    border-right: 1px solid var(--border-default);   /* вертикальные разделители колонок (реал) */
     line-height: var(--line-height-tight);
 }
+/* последняя ячейка ряда — без правой границы (край таблицы) */
+.ds-table__th:last-child,
+.ds-table__td:last-child { border-right: 0; }
 
 /* ─── Заголовки: переносятся, мутеный 13/400, выравнивание сверху ─ */
 .ds-table__th {
