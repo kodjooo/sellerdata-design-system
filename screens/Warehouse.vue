@@ -8,8 +8,8 @@
             </span>
         </template>
         <template #actions>
-            <span class="fm-help-circle topbar__ico" aria-hidden="true"></span>
-            <span class="fm-bell topbar__ico" aria-hidden="true"></span>
+            <DsIconButton variant="ghost" icon="fm-help-circle" aria-label="Помощь" />
+            <DsNotificationMenu :count="332" />
             <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
         </template>
 
@@ -129,6 +129,7 @@ import DsPagination from '@/Components/Ds/DsPagination.vue';
 import DsProductCell from '@/Components/Ds/DsProductCell.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
 import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
+import DsNotificationMenu from '@/Components/Ds/DsNotificationMenu.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
 
 // Иконки сверены с реальным сайдбаром (Authenticated.vue) — как в Screens/Dashboard.vue.
@@ -139,7 +140,7 @@ const nav = [
     { key: 'redeems', label: 'Самовыкупы', icon: 'fm-rotate-ccw', href: route('designSystem.screenRedeems') },
     { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: route('designSystem.screenAdvertising') },
     { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: route('designSystem.screenWarehouse') },
-    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') },
+    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') , submenu: [{ label: 'Общие', href: route('designSystem.screenSettings') }, { label: 'Оплата', href: route('designSystem.screenSettingsBilling') }, { label: 'Пригласи друга', href: route('designSystem.screenSettingsReferral') }] },
 ];
 
 const hintOpen = ref(true);
@@ -257,7 +258,7 @@ function nextOrderDaysTone(row) {
 .hint-thumb { display: block; width: 96px; height: 56px; border-radius: var(--radius-sm); background: var(--brand-gradient); }
 
 /* Верхний тулбар */
-.bar { display: flex; align-items: center; gap: var(--size-8); flex-wrap: wrap; }
+.bar { display: flex; align-items: center; gap: var(--size-16); flex-wrap: wrap; }
 .bar__search { flex: 1 1 auto; max-width: 640px; }
 .bar__select { width: 140px; max-width: 100%; }
 /* Мобайл: селекты-фильтры уходят в full-screen воронку (реал), на странице — только сводка/таблица */

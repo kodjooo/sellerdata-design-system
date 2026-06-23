@@ -8,8 +8,8 @@
             </span>
         </template>
         <template #actions>
-            <span class="fm-help-circle topbar__ico" aria-hidden="true"></span>
-            <span class="fm-bell topbar__ico" aria-hidden="true"></span>
+            <DsIconButton variant="ghost" icon="fm-help-circle" aria-label="Помощь" />
+            <DsNotificationMenu :count="332" />
             <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
         </template>
 
@@ -270,6 +270,7 @@ import DsNotice from '@/Components/Ds/DsNotice.vue';
 import DsInfoList from '@/Components/Ds/DsInfoList.vue';
 import DsCopyButton from '@/Components/Ds/DsCopyButton.vue';
 import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
+import DsNotificationMenu from '@/Components/Ds/DsNotificationMenu.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
 import DsStickyBar from '@/Components/Ds/DsStickyBar.vue';
 
@@ -281,7 +282,7 @@ const nav = [
     { key: 'redeems', label: 'Самовыкупы', icon: 'fm-rotate-ccw', href: route('designSystem.screenRedeems') },
     { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: route('designSystem.screenAdvertising') },
     { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: route('designSystem.screenWarehouse') },
-    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') },
+    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') , submenu: [{ label: 'Общие', href: route('designSystem.screenSettings') }, { label: 'Оплата', href: route('designSystem.screenSettingsBilling') }, { label: 'Пригласи друга', href: route('designSystem.screenSettingsReferral') }] },
 ];
 
 const hintOpen = ref(true);

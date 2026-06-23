@@ -36,18 +36,43 @@
                 <slot name="logo"><span aria-hidden="true">SD</span></slot>
             </div>
             <nav class="ds-app-shell__nav">
-                <a
-                    v-for="item in items"
-                    :key="item.key ?? item.label"
-                    :href="item.href || '#'"
-                    class="ds-app-shell__nav-item"
-                    :class="{ 'is-active': isActive(item) }"
-                    :aria-current="isActive(item) ? 'page' : undefined"
-                    @click="onItemClick(item, $event)"
-                >
-                    <span class="ds-app-shell__nav-icon" :class="iconClass(item.icon)" aria-hidden="true">{{ iconGlyph(item.icon) }}</span>
-                    <span class="t-caption ds-app-shell__nav-label">{{ item.label }}</span>
-                </a>
+                <template v-for="item in items" :key="item.key ?? item.label">
+                    <!-- Пункт с подменю (напр. Настройки) — поповер со списком страниц -->
+                    <DsPopover v-if="item.submenu && item.submenu.length" placement="bottom-start">
+                        <span
+                            class="ds-app-shell__nav-item"
+                            :class="{ 'is-active': isActive(item) }"
+                            role="button"
+                            tabindex="0"
+                        >
+                            <span class="ds-app-shell__nav-icon" :class="iconClass(item.icon)" aria-hidden="true">{{ iconGlyph(item.icon) }}</span>
+                            <span class="t-caption ds-app-shell__nav-label">{{ item.label }}</span>
+                        </span>
+                        <template #content="{ close }">
+                            <div class="ds-app-shell__submenu">
+                                <a
+                                    v-for="s in item.submenu"
+                                    :key="s.href ?? s.label"
+                                    :href="s.href || '#'"
+                                    class="t-body-s ds-app-shell__submenu-link"
+                                    @click="close"
+                                >{{ s.label }}</a>
+                            </div>
+                        </template>
+                    </DsPopover>
+                    <!-- Обычный пункт -->
+                    <a
+                        v-else
+                        :href="item.href || '#'"
+                        class="ds-app-shell__nav-item"
+                        :class="{ 'is-active': isActive(item) }"
+                        :aria-current="isActive(item) ? 'page' : undefined"
+                        @click="onItemClick(item, $event)"
+                    >
+                        <span class="ds-app-shell__nav-icon" :class="iconClass(item.icon)" aria-hidden="true">{{ iconGlyph(item.icon) }}</span>
+                        <span class="t-caption ds-app-shell__nav-label">{{ item.label }}</span>
+                    </a>
+                </template>
             </nav>
         </aside>
 
@@ -83,6 +108,7 @@
 
 <script setup>
 import { onBeforeUnmount, onMounted, ref } from 'vue';
+import DsPopover from './DsPopover.vue';
 
 const props = defineProps({
     // Пункты сайдбара: [{ key?, label, icon, href?, active? }].
@@ -278,7 +304,15 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEsc));
 }
 
 .ds-app-shell__title { flex: 1 1 auto; min-width: 0; }
-.ds-app-shell__actions { display: flex; align-items: center; gap: var(--size-8); }
+.ds-app-shell__actions { display: flex; align-items: center; gap: var(--size-12); }
+
+/* Подменю пункта rail (напр. Настройки): список ссылок в поповере */
+.ds-app-shell__submenu { display: flex; flex-direction: column; min-width: calc(var(--size-128) * 1.4); }
+.ds-app-shell__submenu-link {
+    display: block; padding: var(--size-8) var(--size-12); border-radius: var(--radius-sm);
+    color: var(--text-default); text-decoration: none;
+}
+.ds-app-shell__submenu-link:hover { background: var(--surface-muted); color: var(--text-heading); }
 
 /* ─── Контент (page-padding по брейкпоинтам) ──────────────────── */
 .ds-app-shell__content {

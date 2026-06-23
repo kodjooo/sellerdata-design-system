@@ -67,14 +67,15 @@ function marketIcon(ds) {
 .ds-acc-menu__trigger { display: inline-flex; align-items: center; gap: var(--size-4); }
 .ds-acc-menu__chev { color: var(--text-muted); font-size: var(--font-size-body-s); }
 
-.ds-acc-menu__list { display: flex; flex-direction: column; min-width: calc(var(--size-128) * 1.6); }
+.ds-acc-menu__list { display: flex; flex-direction: column; min-width: calc(var(--size-128) * 2.5); }
 .ds-acc-menu__row {
     display: flex; align-items: center; justify-content: space-between; gap: var(--size-8);
-    width: 100%; padding: var(--size-8) var(--size-12); border: 0; border-radius: var(--radius-sm);
+    width: 100%; padding: var(--size-12) var(--size-16); border: 0; border-radius: var(--radius-sm);
     background: transparent; color: var(--text-default); text-align: left; cursor: pointer;
 }
 .ds-acc-menu__row:hover { background: var(--surface-muted); }
-.ds-acc-menu__row.is-active { color: var(--brand); font-weight: var(--font-weight-semibold); }
+/* активный магазин — фон-подсветка (реал ._active) */
+.ds-acc-menu__row.is-active { background: var(--surface-muted); color: var(--text-heading); font-weight: var(--font-weight-semibold); }
 .ds-acc-menu__store { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ds-acc-menu__ico { flex: 0 0 auto; width: var(--size-16); height: var(--size-16); object-fit: contain; }
 .ds-acc-menu__sep { height: 1px; background: var(--border-default); margin: var(--size-4) 0; }

@@ -9,8 +9,8 @@
             </span>
         </template>
         <template #actions>
-            <span class="fm-help-circle topbar__ico" aria-hidden="true"></span>
-            <span class="fm-bell topbar__ico" aria-hidden="true"></span>
+            <DsIconButton variant="ghost" icon="fm-help-circle" aria-label="Помощь" />
+            <DsNotificationMenu :count="332" />
             <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
         </template>
 
@@ -139,6 +139,7 @@ import DsProductCell from '@/Components/Ds/DsProductCell.vue';
 import DsInfoList from '@/Components/Ds/DsInfoList.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
 import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
+import DsNotificationMenu from '@/Components/Ds/DsNotificationMenu.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
 import DsPopover from '@/Components/Ds/DsPopover.vue';
 
@@ -150,7 +151,7 @@ const nav = [
     { key: 'redeems', label: 'Самовыкупы', icon: 'fm-rotate-ccw', href: route('designSystem.screenRedeems') },
     { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: route('designSystem.screenAdvertising') },
     { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: route('designSystem.screenWarehouse') },
-    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') },
+    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') , submenu: [{ label: 'Общие', href: route('designSystem.screenSettings') }, { label: 'Оплата', href: route('designSystem.screenSettingsBilling') }, { label: 'Пригласи друга', href: route('designSystem.screenSettingsReferral') }] },
 ];
 
 const hintOpen = ref(true);
@@ -284,8 +285,10 @@ function neg(v) { return typeof v === 'string' && v.includes('−'); }
 <style scoped>
 /* ── Каркас: лого / топбар / аккаунт ── */
 .brand { font-size: var(--font-size-body-s); font-weight: var(--font-weight-bold); color: var(--brand); }
-.topbar { display: inline-flex; align-items: center; gap: var(--size-24); }
-.topbar__page { color: var(--text-heading); }
+/* Заголовок + вкладки прижаты к низу топбара: подчёркивание вкладок — по нижней линии (реал) */
+.topbar { display: inline-flex; align-self: stretch; align-items: flex-end; gap: var(--size-24); }
+.topbar__page { color: var(--text-heading); padding-bottom: var(--size-8); }
+.topbar__tabs { margin-bottom: calc(var(--size-20) * -1); }
 .topbar__ico { color: var(--text-muted); font-size: var(--font-size-heading-m); cursor: pointer; }
 
 /* Без своего паддинга — отступ страницы задаёт AppShell content. */
@@ -301,7 +304,7 @@ function neg(v) { return typeof v === 'string' && v.includes('−'); }
 }
 
 /* Верхний тулбар */
-.bar { display: flex; align-items: center; gap: var(--size-8); }
+.bar { display: flex; align-items: center; gap: var(--size-16); }
 .bar__search { flex: 1 1 auto; max-width: 640px; }
 .bar__country { width: 140px; max-width: 100%; }
 /* Кнопка периода — круглая 48×48 (реал dashboard-nav__btn: 50%, brand) */
