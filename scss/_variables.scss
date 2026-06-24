@@ -152,6 +152,7 @@ $base-font-size: 16px;
     --brand-gradient:        linear-gradient(92.5deg, var(--blue-600) 0.41%, var(--blue-300) 100%);
 
     // Accent (положительный зелёный, не CTA)
+    --accent-pink:           #FF5B9C;   /* акцент-розовый (бейдж «+1» промо «Пригласи друга») */
     --accent-positive:       var(--green-600);
     --accent-positive-bg:    var(--green-50);
 
@@ -198,6 +199,7 @@ $base-font-size: 16px;
     --shadow-card:           0 1px 2px      rgb(from var(--gray-900) r g b / 0.12);
     --shadow-button:         0 4px 14px     rgb(from var(--gray-900) r g b / 0.06);
     --shadow-aside:          4px 0 16px 2px rgb(from var(--gray-900) r g b / 0.03);
+    --shadow-bar:            0 -6px 12px    rgb(from var(--gray-900) r g b / 0.06);   /* нижний sticky-бар действий (реал buttons-panel) */
     --shadow-dropdown:       0 4px 20px     rgb(from var(--gray-900) r g b / 0.20);
     --shadow-input-focus:    0 0 0 4px      rgb(from var(--brand)    r g b / 0.12);
     // Тень модалок/поповеров — свод повторяющейся rgba(24,39,75,.12) (≈36 вхождений)
@@ -208,6 +210,7 @@ $base-font-size: 16px;
     // ── Notice: дополнительные семантические варианты ──────
     --notice-success-bg:     rgb(from var(--green-600) r g b / 0.12);
     --notice-success-text:   var(--green-600);
+    --notice-success-border: rgb(from var(--green-600) r g b / 0.30);
     --notice-info-bg:        rgb(from var(--blue-300) r g b / 0.12);
     --notice-info-border:    var(--blue-300);
 

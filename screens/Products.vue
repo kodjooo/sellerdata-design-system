@@ -1,18 +1,6 @@
 <template>
     <Head title="Товары — экран-эталон" />
-    <DsAppShell :items="nav" active="products">
-        <template #logo><span class="brand">sellerdata</span></template>
-        <template #title>
-            <span class="topbar">
-                <strong class="t-title-m topbar__page">Товары</strong>
-            </span>
-        </template>
-        <template #actions>
-            <DsIconButton variant="ghost" icon="fm-help-circle" aria-label="Помощь" />
-            <DsNotificationMenu :count="332" />
-            <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
-        </template>
-
+    <ScreenShell active="products" title="Товары">
         <div class="screen">
             <!-- Онбординг-баннер раздела (реал: BreezeDashboardInfo / подсказка о себестоимости) -->
             <DsNotice v-model:visible="hintOpen" tone="plain" collapse-mobile>
@@ -33,6 +21,7 @@
                     searchable
                     multiple
                     show-select-all
+                    select-all-label="Выбрать все"
                     class="bar__search bar__desktop-only"
                 >
                     <!-- Опция-товар: миниатюра + название + nmId/артикул (реал-дропдаун) -->
@@ -52,6 +41,7 @@
                     :rows="rows"
                     row-key="id"
                     expandable
+                    expand-column="title"
                     default-sort-key="title"
                     mobile-mode="compact"
                     :mobile-columns="['select', 'title']"
@@ -75,9 +65,8 @@
                         >
                             <template #sub>
                                 <DsCopyButton :text="String(row.nmId)" />
-                                <span class="cell-id">{{ row.nmId }}</span>
-                                <span v-if="row.article" class="cell-id">/ {{ row.article }}</span>
-                                <span v-if="row.price" class="cell-id">/ Цена: {{ row.price }}</span>
+                                <span class="cell-id">ID {{ row.nmId }}</span>
+                                <span v-if="row.price" class="cell-id">/ цена {{ row.price }} ₽</span>
                             </template>
                         </DsProductCell>
                         <span v-else class="variant">
@@ -94,9 +83,9 @@
                         </button>
                     </template>
 
-                    <!-- Тип расчёта себестоимости -->
+                    <!-- Тип расчёта себестоимости — select (реал: «За всё время» / «По периодам») -->
                     <template #cell-type="{ row }">
-                        <span class="t-body-s type-cell">{{ row.type }}</span>
+                        <DsSelect v-model="row.type" :options="typeOptions" :show-footer="false" class="type-select" />
                     </template>
 
                     <!-- Комментарий -->
@@ -104,11 +93,6 @@
                         <span class="comment" :class="{ 'comment--filled': row.comment }">
                             {{ row.comment || 'Комментарий' }}
                         </span>
-                    </template>
-
-                    <!-- Служебная колонка «Подробнее» -->
-                    <template #cell-more>
-                        <button type="button" class="more-btn fm-chevron-right" aria-label="Подробнее"></button>
                     </template>
 
                     <template #empty>
@@ -119,21 +103,11 @@
                         </div>
                     </template>
                 </DsTable>
+                <!-- Пагинация — внутри карточки таблицы (реал/Дэшборд) -->
+                <div class="tfoot">
+                    <DsPagination :page="page" :total="780" :per-page="50" @change="p => page = p" />
+                </div>
             </DsCard>
-
-            <!-- Панель массовых действий (реал: buttons-panel — Скачать / Загрузить .xls) -->
-            <DsStickyBar class="actions">
-                <DsButton variant="primary">Скачать таблицу (.xls)</DsButton>
-                <DsButton variant="primary">Загрузить таблицу (.xls)</DsButton>
-            </DsStickyBar>
-
-            <!-- Пагинация -->
-            <div class="tfoot">
-                <DsPagination :page="page" :total="780" :per-page="50" @change="p => page = p" />
-            </div>
-
-            <!-- Подвал поддержки -->
-            <DsSupportFooter />
 
             <!-- Мобильный фильтр: full-screen лист (реал /products мобайл — воронка) -->
             <DsFilterSheet
@@ -143,17 +117,24 @@
                 @apply="filterOpen = false"
             />
         </div>
-    </DsAppShell>
+
+        <!-- Нижний закреплённый бар массовых действий (реал buttons-panel) -->
+        <template #bottombar>
+            <DsStickyBar class="actions">
+                <DsButton variant="primary">Скачать таблицу (.xls)</DsButton>
+                <DsButton variant="primary">Загрузить таблицу (.xls)</DsButton>
+            </DsStickyBar>
+        </template>
+    </ScreenShell>
 </template>
 
 <script setup>
 import { ref } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import DsAppShell from '@/Components/Ds/DsAppShell.vue';
+import ScreenShell from './ScreenShell.vue';
 import DsCard from '@/Components/Ds/DsCard.vue';
 import DsButton from '@/Components/Ds/DsButton.vue';
 import DsIconButton from '@/Components/Ds/DsIconButton.vue';
-import DsSupportFooter from '@/Components/Ds/DsSupportFooter.vue';
 import DsSelect from '@/Components/Ds/DsSelect.vue';
 import DsCheckbox from '@/Components/Ds/DsCheckbox.vue';
 import DsTable from '@/Components/Ds/DsTable.vue';
@@ -161,21 +142,8 @@ import DsPagination from '@/Components/Ds/DsPagination.vue';
 import DsProductCell from '@/Components/Ds/DsProductCell.vue';
 import DsCopyButton from '@/Components/Ds/DsCopyButton.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
-import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
-import DsNotificationMenu from '@/Components/Ds/DsNotificationMenu.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
 import DsStickyBar from '@/Components/Ds/DsStickyBar.vue';
-
-// Иконки сверены с реальным сайдбаром (Authenticated.vue).
-const nav = [
-    { key: 'dashboard', label: 'Дэшборд', icon: 'fm-layout', href: route('designSystem.screenDashboard') },
-    { key: 'products', label: 'Товары', icon: 'fm-clipboard', href: route('designSystem.screenProducts') },
-    { key: 'expenses', label: 'Расходы', icon: 'fm-credit-card', href: route('designSystem.screenExpenses') },
-    { key: 'redeems', label: 'Самовыкупы', icon: 'fm-rotate-ccw', href: route('designSystem.screenRedeems') },
-    { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: route('designSystem.screenAdvertising') },
-    { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: route('designSystem.screenWarehouse') },
-    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') , submenu: [{ label: 'Общие', href: route('designSystem.screenSettings') }, { label: 'Оплата', href: route('designSystem.screenSettingsBilling') }, { label: 'Пригласи друга', href: route('designSystem.screenSettingsReferral') }] },
-];
 
 const hintOpen = ref(true);
 const search = ref([]);
@@ -193,37 +161,38 @@ const filterItems = [
 ];
 
 // Колонки таблицы (реал Products.vue: чекбокс | Товары | Себест. | Тип | Комментарий | →).
+// Тип расчёта себестоимости (реал-select).
+const typeOptions = ['За всё время', 'По периодам'];
 const cols = [
     { key: 'select', label: '', width: 'var(--size-32)', align: 'center' },
-    { key: 'title', label: 'Товары', width: '36%' },
-    { key: 'cost', label: 'Себест.', width: 'var(--size-128)' },
-    { key: 'type', label: 'Тип', width: 'var(--size-128)' },
+    { key: 'title', label: 'Товары', width: '36%', sortable: true },
+    { key: 'cost', label: 'Себест.', width: 'var(--size-128)', sortable: true },
+    { key: 'type', label: 'Тип', width: 'var(--size-128)', sortable: true },
     { key: 'comment', label: 'Комментарий' },
-    { key: 'more', label: '', width: 'var(--size-40)', align: 'center' },
 ];
 
 // Данные строк — состав/наименования сверены с docs/reference/screens/товары__список@wb.png.
 const rows = [
     {
-        id: 1, title: 'Автомобильное зарядное устройство', nmId: 420154, article: 'AVTO-01',
+        id: 1, title: 'Автомобильное зарядное устройство', nmId: 420154, article: 'AVTO-01', price: '1 512,00',
         cost: '440,00', type: 'За всё время', comment: '',
         children: [
             { id: '1a', isVariant: true, barcode: '2040000000011', size: '', cost: '440,00', type: 'За всё время', comment: '' },
             { id: '1b', isVariant: true, barcode: '2040000000028', size: '', cost: '440,00', type: 'За всё время', comment: '' },
         ],
     },
-    { id: 2, title: 'Автомобильное зарядное устройство', nmId: 420178, article: 'AVTO-02', cost: '510,00', type: 'По периодам', comment: '' },
-    { id: 3, title: 'Автомобильное зарядное устройство', nmId: 426318, article: 'AVTO-03', cost: '0,00', type: 'За всё время', comment: '' },
-    { id: 4, title: 'Аксессуары', nmId: 351221, article: 'AKS-01', cost: '120,00', type: 'За всё время', comment: '' },
-    { id: 5, title: 'Аксессуары', nmId: 351809, article: 'AKS-02', cost: '120,00', type: 'За всё время', comment: '' },
-    { id: 6, title: 'Аксессуары', nmId: 144657, article: 'AKS-03', cost: '95,00', type: 'За всё время', comment: '' },
-    { id: 7, title: 'Банки для сыпучих продуктов', nmId: 880403, article: 'BANK-01', cost: '210,00', type: 'За всё время', comment: '' },
-    { id: 8, title: 'Банки для сыпучих продуктов', nmId: 894004, article: 'BANK-02', cost: '210,00', type: 'За всё время', comment: '' },
-    { id: 9, title: 'Банки для сыпучих продуктов', nmId: 904100, article: 'BANK-03', cost: '700,00', type: 'За всё время', comment: 'Подарочная упаковка' },
-    { id: 10, title: 'Батарейка', nmId: 129875, article: 'BAT-01', cost: '60,00', type: 'За всё время', comment: '' },
-    { id: 11, title: 'Батарейка', nmId: 348820, article: 'BAT-02', cost: '60,00', type: 'За всё время', comment: '' },
-    { id: 12, title: 'Бинт', nmId: 175016, article: 'BINT-01', cost: '40,00', type: 'За всё время', comment: '' },
-    { id: 13, title: 'Бинт', nmId: 187735, article: 'BINT-02', cost: '305,00', type: 'За всё время', comment: '' },
+    { id: 2, title: 'Автомобильное зарядное устройство', nmId: 420178, article: 'AVTO-02', price: '1 512,00', cost: '510,00', type: 'По периодам', comment: '' },
+    { id: 3, title: 'Автомобильное зарядное устройство', nmId: 426318, article: 'AVTO-03', price: '1 312,00', cost: '0,00', type: 'За всё время', comment: '' },
+    { id: 4, title: 'Аксессуары', nmId: 351221, article: 'AKS-01', price: '690,00', cost: '120,00', type: 'За всё время', comment: '' },
+    { id: 5, title: 'Аксессуары', nmId: 351809, article: 'AKS-02', price: '690,00', cost: '120,00', type: 'За всё время', comment: '' },
+    { id: 6, title: 'Аксессуары', nmId: 144657, article: 'AKS-03', price: '590,00', cost: '95,00', type: 'За всё время', comment: '' },
+    { id: 7, title: 'Банки для сыпучих продуктов', nmId: 880403, article: 'BANK-01', price: '1 290,00', cost: '210,00', type: 'За всё время', comment: '' },
+    { id: 8, title: 'Банки для сыпучих продуктов', nmId: 894004, article: 'BANK-02', price: '1 290,00', cost: '210,00', type: 'За всё время', comment: '' },
+    { id: 9, title: 'Банки для сыпучих продуктов', nmId: 904100, article: 'BANK-03', price: '2 100,00', cost: '700,00', type: 'За всё время', comment: 'Подарочная упаковка' },
+    { id: 10, title: 'Батарейка', nmId: 129875, article: 'BAT-01', price: '320,00', cost: '60,00', type: 'За всё время', comment: '' },
+    { id: 11, title: 'Батарейка', nmId: 348820, article: 'BAT-02', price: '320,00', cost: '60,00', type: 'За всё время', comment: '' },
+    { id: 12, title: 'Бинт', nmId: 175016, article: 'BINT-01', price: '180,00', cost: '40,00', type: 'За всё время', comment: '' },
+    { id: 13, title: 'Бинт', nmId: 187735, article: 'BINT-02', price: '905,00', cost: '305,00', type: 'За всё время', comment: '' },
 // В реале каждый товар раскрывается в свои баркоды — гарантируем expander на всех строках.
 ].map(r => r.children ? r : ({
     ...r,
@@ -235,12 +204,6 @@ const searchOptions = rows.map(r => ({ value: r.nmId, label: r.title, sub: `${r.
 </script>
 
 <style scoped>
-/* ── Каркас: лого / топбар / аккаунт ── */
-.brand { font-size: var(--font-size-body-s); font-weight: var(--font-weight-bold); color: var(--brand); }
-.topbar { display: inline-flex; align-items: center; gap: var(--size-24); }
-.topbar__page { color: var(--text-heading); }
-.topbar__ico { color: var(--text-muted); font-size: var(--font-size-heading-m); cursor: pointer; }
-
 /* Без своего паддинга — отступ страницы задаёт AppShell content. */
 .screen { display: flex; flex-direction: column; gap: var(--size-16); }
 
@@ -305,20 +268,16 @@ const searchOptions = rows.map(r => ({ value: r.nmId, label: r.title, sub: `${r.
 .comment--filled { color: var(--text-default); }
 .comment:hover { border-color: var(--border-input); }
 
-/* Кнопка «Подробнее» */
-.more-btn { border: 0; background: transparent; color: var(--text-muted); font-size: var(--font-size-title-m); line-height: 1; cursor: pointer; }
-.more-btn:hover { color: var(--brand); }
-
 /* Пустое состояние */
 .empty { display: flex; flex-direction: column; align-items: center; gap: var(--size-8); padding: var(--size-48) var(--size-16); text-align: center; }
 .empty__icon { font-size: var(--font-size-heading-l); color: var(--text-placeholder); }
 .empty__title { color: var(--text-heading); }
 .empty__text { color: var(--text-muted); }
 
-/* Панель массовых действий */
-.actions { display: flex; justify-content: center; gap: var(--size-8); flex-wrap: wrap; }
+/* Панель массовых действий — реал buttons-panel выровнена по левому краю */
+.screen .actions { display: flex; justify-content: flex-start; gap: var(--size-8); flex-wrap: wrap; }
 
-.tfoot { display: flex; justify-content: center; }
+.tfoot { display: flex; justify-content: center; padding: var(--size-16) var(--size-12); border-top: 1px solid var(--border-default); }
 
 /* Подвал поддержки */
 .support { text-align: center; color: var(--text-muted); }

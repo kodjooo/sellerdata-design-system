@@ -1,47 +1,26 @@
 <template>
     <Head title="Настройки · Оплата — экран-эталон" />
-    <DsAppShell :items="nav" active="settings">
-        <template #logo><span class="brand">sellerdata</span></template>
-        <template #title>
-            <span class="topbar">
-                <strong class="t-title-m topbar__page">Оплата</strong>
-            </span>
-        </template>
-        <template #actions>
-            <DsIconButton variant="ghost" icon="fm-help-circle" aria-label="Помощь" />
-            <DsNotificationMenu :count="332" />
-            <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
-        </template>
-
+    <ScreenShell active="settings" title="Оплата">
         <div class="screen">
-            <!-- Под-меню настроек: Общие | Оплата | Пригласи друга -->
-            <nav class="settings-submenu">
-                <Link
-                    :href="route('designSystem.screenSettings')"
-                    class="t-label-m settings-submenu__link"
-                >Общие</Link>
-                <Link
-                    :href="route('designSystem.screenSettingsBilling')"
-                    class="t-label-m settings-submenu__link is-active"
-                >Оплата</Link>
-                <Link
-                    :href="route('designSystem.screenSettingsReferral')"
-                    class="t-label-m settings-submenu__link"
-                >Пригласи друга</Link>
-            </nav>
 
-            <!-- ─── Секция «Тарифы» ─── -->
+            <!-- ─── Секция тарифов (без заголовка «Тарифы» — как реал) ─── -->
             <DsCard radius="lg" padding="--size-24" tag="section">
-                <h2 class="t-heading-m section__title">Тарифы</h2>
-
-                <!-- Переключатели срок оплаты + валюта (DsPriceToggle) -->
+                <!-- Переключатели срок оплаты + валюта (DsPriceToggle): Срок по центру над тарифами, Валюта справа -->
                 <div class="pricing-head">
                     <DsPriceToggle v-model="period" :options="periods" label="Срок оплаты" />
                     <DsPriceToggle v-model="currency" :options="currencyOptions" label="Валюта" />
                 </div>
 
-                <!-- 3 пакета на DsPricingCard (текущий подсвечен) -->
+                <!-- Колонка названий строк (реал: фичи слева) + 3 пакета на DsPricingCard.
+                     Спейсер 124px = высота шапки карточки; строки по 48px = строки DsPricingCard. -->
                 <div class="plans">
+                    <div class="plan-labels" aria-hidden="true">
+                        <div class="plan-labels__spacer"></div>
+                        <div v-for="(lbl, i) in rowLabels" :key="i" class="t-body-s plan-labels__row">
+                            <span>{{ lbl.text }}</span>
+                            <span v-if="lbl.info" class="plan-labels__info fm-info" aria-hidden="true"></span>
+                        </div>
+                    </div>
                     <DsPricingCard
                         v-for="plan in plans"
                         :key="plan.id"
@@ -52,6 +31,7 @@
                         :limit="plan.limit"
                         :accounts="plan.accounts"
                         :features="plan.features"
+                        :row-labels="rowLabels.map(l => l.text)"
                         :current="plan.current"
                         @buy="openBuy(plan)"
                     />
@@ -77,7 +57,6 @@
                 </div>
             </DsCard>
 
-            <DsSupportFooter />
         </div>
 
         <!-- ─── Модалка «Как вы будете платить?» (реал buyModal) ─── -->
@@ -132,38 +111,23 @@
                 <DsButton variant="primary" :disabled="!canPay">Далее</DsButton>
             </template>
         </DsModal>
-    </DsAppShell>
+    </ScreenShell>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
-import DsAppShell from '@/Components/Ds/DsAppShell.vue';
+import ScreenShell from './ScreenShell.vue';
 import DsCard from '@/Components/Ds/DsCard.vue';
 import DsButton from '@/Components/Ds/DsButton.vue';
-import DsSupportFooter from '@/Components/Ds/DsSupportFooter.vue';
 import DsInput from '@/Components/Ds/DsInput.vue';
 import DsSelect from '@/Components/Ds/DsSelect.vue';
 import DsCheckbox from '@/Components/Ds/DsCheckbox.vue';
 import DsModal from '@/Components/Ds/DsModal.vue';
 import DsInfoList from '@/Components/Ds/DsInfoList.vue';
-import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
-import DsIconButton from '@/Components/Ds/DsIconButton.vue';
-import DsNotificationMenu from '@/Components/Ds/DsNotificationMenu.vue';
 import DsPricingCard from '@/Components/Ds/DsPricingCard.vue';
 import DsServiceCard from '@/Components/Ds/DsServiceCard.vue';
 import DsPriceToggle from '@/Components/Ds/DsPriceToggle.vue';
-
-// Сайдбар — сверен с реальным Authenticated.vue.
-const nav = [
-    { key: 'dashboard', label: 'Дэшборд', icon: 'fm-layout', href: route('designSystem.screenDashboard') },
-    { key: 'products', label: 'Товары', icon: 'fm-clipboard', href: route('designSystem.screenProducts') },
-    { key: 'expenses', label: 'Расходы', icon: 'fm-credit-card', href: route('designSystem.screenExpenses') },
-    { key: 'redeems', label: 'Самовыкупы', icon: 'fm-rotate-ccw', href: route('designSystem.screenRedeems') },
-    { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: route('designSystem.screenAdvertising') },
-    { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: route('designSystem.screenWarehouse') },
-    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') , submenu: [{ label: 'Общие', href: route('designSystem.screenSettings') }, { label: 'Оплата', href: route('designSystem.screenSettingsBilling') }, { label: 'Пригласи друга', href: route('designSystem.screenSettingsReferral') }] },
-];
 
 // ── Переключатели срока и валюты (DsPriceToggle) ──
 const period = ref('yearly');
@@ -178,6 +142,21 @@ const currencyOptions = [
     { key: 'KZT', label: '₸ Тенге' },
 ];
 const symbol = computed(() => (currency.value === 'KZT' ? '₸' : '₽'));
+
+// Названия строк таблицы тарифов (реал: левая колонка фич), выровнены со строками DsPricingCard:
+// Оборот (=лимит), Магазины (=кол-во аккаунтов), далее 8 фич = массив features пакетов.
+const rowLabels = [
+    { text: 'Оборот', info: true },
+    { text: 'Магазины', info: true },
+    { text: 'Дэшборд' },
+    { text: 'Товары' },
+    { text: 'Расходы' },
+    { text: 'Импорт себестоимости' },
+    { text: 'Самовыкупы' },
+    { text: 'Склад' },
+    { text: 'Диаграммы', info: true },
+    { text: 'Чат поддержки' },
+];
 
 // Пакеты (реал packs; цены/лимиты — со скрина тариф__список@wb, период 12 мес).
 // Первая фича — число аккаунтов (проп accounts), далее check/minus через features.
@@ -247,12 +226,6 @@ function openBuy(plan) {
 <style lang="scss" scoped>
 @use 'responsive' as *;
 
-/* ── Каркас ── */
-.brand { font-size: var(--font-size-body-s); font-weight: var(--font-weight-bold); color: var(--brand); }
-.topbar { display: inline-flex; align-items: center; gap: var(--size-24); }
-.topbar__page { color: var(--text-heading); }
-.topbar__ico { color: var(--text-muted); font-size: var(--font-size-heading-m); cursor: pointer; }
-
 .screen { display: flex; flex-direction: column; gap: var(--size-16); }
 .section__title { color: var(--text-heading); margin-bottom: var(--size-16); }
 
@@ -275,15 +248,37 @@ function openBuy(plan) {
 }
 
 /* ── Тарифы ── */
+/* Сетка как у тарифов: [колонка-метки] [тарифы] [тарифы] — «Срок оплаты» по центру над
+   тарифами, «Валюта» справа (реал), а не просто слева/справа на всю ширину. */
 .pricing-head {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    gap: var(--size-24); flex-wrap: wrap; margin-bottom: var(--size-32);
+    display: grid;
+    grid-template-columns: minmax(var(--size-128), 0.85fr) repeat(3, 1fr);
+    align-items: start;
+    gap: var(--size-24);
+    margin-bottom: var(--size-32);
 }
-.plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--size-16); }
+.pricing-head > :nth-child(1) { grid-column: 2 / 4; justify-self: center; }  /* «Срок оплаты» над Старт+Стандарт */
+.pricing-head > :nth-child(2) { grid-column: 4 / 5; justify-self: center; }  /* «Валюта» над Бизнес */
+.plans { display: grid; grid-template-columns: minmax(var(--size-128), 0.85fr) repeat(3, 1fr); gap: var(--size-16); }
+
+/* Колонка названий фич слева (реал): спейсер под шапку + строки 48px встык со строками карточки. */
+.plan-labels { display: flex; flex-direction: column; }
+.plan-labels__spacer { height: 124px; }  /* = высота .ds-pricing-card__head */
+.plan-labels__row {
+    display: flex; align-items: center; gap: var(--size-6);
+    height: var(--size-48); border-bottom: 1px solid var(--border-default);
+    color: var(--text-heading);
+}
+.plan-labels__info { color: var(--text-placeholder); font-size: var(--font-size-body-s); }
 .services { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--size-16); }
 
 @include respond-below(lg) {
+    /* Мобайл/планшет: карточки стопкой, колонка-метки скрыта (значения дублируются в карточке). */
+    .pricing-head { grid-template-columns: 1fr; }
+    .pricing-head > :nth-child(1),
+    .pricing-head > :nth-child(2) { grid-column: 1; justify-self: stretch; }
     .plans { grid-template-columns: 1fr; }
+    .plan-labels { display: none; }
     .services { grid-template-columns: 1fr; }
 }
 

@@ -42,4 +42,6 @@ defineEmits(['mark-read', 'mark-all-read']);
 <style lang="scss" scoped>
 /* Ширина панели уведомлений (реал ~375px) — задаёт хост-поповер. */
 .ds-notif-menu__panel { width: calc(var(--size-128) * 3); max-width: 90vw; }
+/* Внутри поповера список — плоский (рамку/тень/фон даёт сам поповер; иначе двойная рамка). */
+.ds-notif-menu__panel :deep(.ds-notif) { border-radius: 0; box-shadow: none; background: transparent; }
 </style>

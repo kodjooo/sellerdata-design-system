@@ -87,4 +87,11 @@ defineEmits(['update:modelValue']);
     background: var(--surface-disabled);
     color: var(--text-muted);
 }
+
+/* Мобайл: сегмент во всю ширину, кнопки равной доли, компактный паддинг — чтобы не обрезалось. */
+@media (max-width: 767.98px) {
+    .ds-price-toggle { width: 100%; }
+    .segment { display: flex; width: 100%; }
+    .segment__btn { flex: 1 1 0; justify-content: center; padding: var(--size-6) var(--size-8); }
+}
 </style>

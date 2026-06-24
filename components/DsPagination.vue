@@ -205,6 +205,8 @@ function isEllipsis(item) {
     position: relative;
     display: none;
     align-items: center;
+    height: var(--control-height-sm);   /* = высота кнопок-стрелок → центрирование по вертикали */
+    margin: 0;                          /* гасим глобальное label{margin-bottom} (сдвигало центр) */
     color: var(--text-muted);
     white-space: nowrap;
     padding: 0 var(--size-8);

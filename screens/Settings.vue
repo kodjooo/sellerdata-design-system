@@ -1,35 +1,7 @@
 <template>
     <Head title="Настройки — экран-эталон" />
-    <DsAppShell :items="nav" active="settings">
-        <template #logo><span class="brand">sellerdata</span></template>
-        <template #title>
-            <span class="topbar">
-                <strong class="t-title-m topbar__page">Общие</strong>
-            </span>
-        </template>
-        <template #actions>
-            <DsIconButton variant="ghost" icon="fm-help-circle" aria-label="Помощь" />
-            <DsNotificationMenu :count="332" />
-            <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
-        </template>
-
+    <ScreenShell active="settings" title="Общие">
         <div class="screen">
-            <!-- Под-меню настроек: Общие | Оплата | Пригласи друга -->
-            <nav class="settings-submenu">
-                <Link
-                    :href="route('designSystem.screenSettings')"
-                    class="t-label-m settings-submenu__link is-active"
-                >Общие</Link>
-                <Link
-                    :href="route('designSystem.screenSettingsBilling')"
-                    class="t-label-m settings-submenu__link"
-                >Оплата</Link>
-                <Link
-                    :href="route('designSystem.screenSettingsReferral')"
-                    class="t-label-m settings-submenu__link"
-                >Пригласи друга</Link>
-            </nav>
-
             <!-- Онбординг-баннер раздела (реал: BreezeDashboardInfo «Режим настроек…») -->
             <DsNotice v-model:visible="hintOpen" tone="plain" collapse-mobile>
                 <template #media><span class="hint-thumb" aria-hidden="true"></span></template>
@@ -118,11 +90,10 @@
             </DsCard>
 
             <!-- Подвал поддержки -->
-            <DsSupportFooter />
         </div>
 
         <!-- ─── Модалка «Изменение подключения» (реал UpdateAccountApiKeyLink) ─── -->
-        <DsModal v-model="keyOpen" size="md">
+        <DsModal v-model="keyOpen" size="sm">
             <template #header>
                 <div class="key-head">
                     <h2 class="t-title-m key-head__title">Изменение подключения</h2>
@@ -130,8 +101,8 @@
                 </div>
             </template>
 
-            <!-- Текущее состояние ключа -->
-            <DsNotice tone="plain" :dismissible="false" class="key-status">
+            <!-- Текущее состояние ключа — зелёный success-бокс (реал) -->
+            <DsNotice tone="success" :dismissible="false" class="key-status">
                 <template #media><span class="key-status__ico fm-check-circle" aria-hidden="true"></span></template>
                 <strong class="t-label-m key-status__title">Подключено по API-ключу</strong>
                 <span class="t-body-s key-status__sub">Ключ активен до 7 дек. 2026 г.</span>
@@ -265,35 +236,20 @@
                 <DsButton variant="primary" :disabled="!newMarketplace">Продолжить</DsButton>
             </template>
         </DsModal>
-    </DsAppShell>
+    </ScreenShell>
 </template>
 
 <script setup>
 import { ref } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
-import DsAppShell from '@/Components/Ds/DsAppShell.vue';
+import ScreenShell from './ScreenShell.vue';
 import DsCard from '@/Components/Ds/DsCard.vue';
 import DsButton from '@/Components/Ds/DsButton.vue';
-import DsSupportFooter from '@/Components/Ds/DsSupportFooter.vue';
 import DsInput from '@/Components/Ds/DsInput.vue';
 import DsSelect from '@/Components/Ds/DsSelect.vue';
 import DsCheckbox from '@/Components/Ds/DsCheckbox.vue';
 import DsModal from '@/Components/Ds/DsModal.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
-import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
-import DsIconButton from '@/Components/Ds/DsIconButton.vue';
-import DsNotificationMenu from '@/Components/Ds/DsNotificationMenu.vue';
-
-// Сайдбар — сверен с реальным Authenticated.vue (как в Screens/Expenses.vue).
-const nav = [
-    { key: 'dashboard', label: 'Дэшборд', icon: 'fm-layout', href: route('designSystem.screenDashboard') },
-    { key: 'products', label: 'Товары', icon: 'fm-clipboard', href: route('designSystem.screenProducts') },
-    { key: 'expenses', label: 'Расходы', icon: 'fm-credit-card', href: route('designSystem.screenExpenses') },
-    { key: 'redeems', label: 'Самовыкупы', icon: 'fm-rotate-ccw', href: route('designSystem.screenRedeems') },
-    { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: route('designSystem.screenAdvertising') },
-    { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: route('designSystem.screenWarehouse') },
-    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') , submenu: [{ label: 'Общие', href: route('designSystem.screenSettings') }, { label: 'Оплата', href: route('designSystem.screenSettingsBilling') }, { label: 'Пригласи друга', href: route('designSystem.screenSettingsReferral') }] },
-];
 
 const hintOpen = ref(true);
 
@@ -361,12 +317,6 @@ const marketplaces = ['Wildberries', 'Ozon', 'Яндекс Маркет'];
 <style lang="scss" scoped>
 @use 'responsive' as *;
 
-/* ── Каркас: лого / топбар / аккаунт (как в Screens/Expenses.vue) ── */
-.brand { font-size: var(--font-size-body-s); font-weight: var(--font-weight-bold); color: var(--brand); }
-.topbar { display: inline-flex; align-items: center; gap: var(--size-24); }
-.topbar__page { color: var(--text-heading); }
-.topbar__ico { color: var(--text-muted); font-size: var(--font-size-heading-m); cursor: pointer; }
-
 .screen { display: flex; flex-direction: column; gap: var(--size-16); }
 
 /* Под-меню настроек (underline-вкладки на Link, единый паттерн на 3 страницах) */
@@ -400,11 +350,17 @@ const marketplaces = ['Wildberries', 'Ozon', 'Яндекс Маркет'];
 /* ── Карточки магазинов ── */
 .stores { display: flex; flex-direction: column; gap: var(--size-12); }
 .store {
-    display: flex; align-items: center; gap: var(--size-16);
+    /* Ряд без переноса: имя | пилюли (переносятся ВНУТРИ) | действия справа сверху (реал). */
+    display: flex; align-items: flex-start; gap: var(--size-16);
     padding: var(--size-16) var(--size-24);
     border: 1px solid var(--border-default); border-radius: var(--radius-md);
     background: var(--surface-default);
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+}
+/* Мобайл: карточка магазина — в стопку; действия плотнее, чтобы «Удалить» не обрезался. */
+@media (max-width: 767.98px) {
+    .store { flex-wrap: wrap; }
+    .store__actions { gap: var(--size-12); flex: 1 1 100%; }
 }
 .store.is-active { background: var(--surface-subtle); border-color: transparent; }
 .store__head { display: flex; flex-direction: column; gap: var(--size-2); min-width: 160px; }
@@ -430,7 +386,7 @@ const marketplaces = ['Wildberries', 'Ozon', 'Яндекс Маркет'];
 .feature--attention .feature__ico { background: var(--status-attention); }
 .feature--add .feature__ico { background: var(--surface-disabled); color: var(--text-muted); }
 
-.store__actions { display: flex; align-items: center; gap: var(--size-24); flex-wrap: wrap; }
+.store__actions { display: flex; align-items: center; gap: var(--size-24); flex-wrap: wrap; flex: 0 0 auto; }
 .store-action {
     display: inline-flex; align-items: center; gap: var(--size-8);
     border: 0; background: transparent; color: var(--brand);
@@ -445,7 +401,8 @@ const marketplaces = ['Wildberries', 'Ozon', 'Яндекс Маркет'];
 /* ── Прочие настройки ── */
 .subsection { margin-top: var(--size-24); padding-top: var(--size-16); border-top: 1px solid var(--border-default); }
 .subsection__title { color: var(--text-default); font-size: var(--font-size-title-m); margin-bottom: var(--size-12); }
-.email { display: flex; flex-direction: column; gap: var(--size-6); align-items: flex-start; }
+/* Блок подтверждения почты — карточка (фон+рамка) для читаемости (реал). */
+.email { display: flex; flex-direction: column; gap: var(--size-6); align-items: flex-start; padding: var(--size-20) var(--size-24); border: 1px solid var(--border-default); border-radius: var(--radius-md); background: var(--surface-subtle); }
 .email__title { color: var(--text-default); font-size: var(--font-size-title-m); }
 .email__text { color: var(--text-default); }
 .email__btn { margin-top: var(--size-8); }
@@ -457,7 +414,8 @@ const marketplaces = ['Wildberries', 'Ozon', 'Яндекс Маркет'];
 .key-head__title { color: var(--text-on-brand); margin: 0; }
 .key-head__sub { color: var(--text-on-brand); opacity: var(--opacity-hover); }
 
-.key-status { margin-bottom: var(--size-16); border-color: var(--notice-success-text); background: var(--notice-success-bg); }
+/* Фон/рамку зелёного бокса задаёт DsNotice tone="success" (компонент); здесь только отступ. */
+.key-status { margin-bottom: var(--size-16); }
 .key-status__ico { color: var(--notice-success-text); font-size: var(--font-size-heading-m); }
 .key-status__title { display: block; color: var(--notice-success-text); }
 .key-status__sub { display: block; color: var(--text-default); }

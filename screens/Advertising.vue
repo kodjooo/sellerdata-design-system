@@ -1,17 +1,8 @@
 <template>
     <Head title="Реклама — экран-эталон" />
-    <DsAppShell :items="nav" active="ads">
-        <template #logo><span class="brand">sellerdata</span></template>
-        <template #title>
-            <span class="topbar">
-                <strong class="t-title-m topbar__page">Реклама</strong>
-                <DsTabs v-model="tab" :tabs="tabs" class="topbar__tabs" />
-            </span>
-        </template>
-        <template #actions>
-            <DsIconButton variant="ghost" icon="fm-help-circle" aria-label="Помощь" />
-            <DsNotificationMenu :count="332" />
-            <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
+    <ScreenShell active="ads" title="Реклама">
+        <template #tabs>
+            <DsTabs v-model="tab" :tabs="tabs" class="topbar__tabs" />
         </template>
 
         <div class="screen">
@@ -57,6 +48,7 @@
                     :rows="rows"
                     row-key="id"
                     expandable
+                    numeric-align="left"
                     mobile-mode="compact"
                     :mobile-columns="['campaign', 'totalBudget']"
                     detail-title="Кампания"
@@ -98,11 +90,10 @@
                         <span :class="dim(value)">{{ value }}</span>
                     </template>
                 </DsTable>
+                <div class="tfoot">
+                    <DsPagination :page="page" :total="120" :per-page="20" @change="p => page = p" />
+                </div>
             </DsCard>
-
-            <div class="tfoot">
-                <DsPagination :page="page" :total="120" :per-page="20" @change="p => page = p" />
-            </div>
 
             <!-- Мобильный фильтр: full-screen лист (реал /advertising мобайл — воронка) -->
             <DsFilterSheet
@@ -112,13 +103,13 @@
                 @apply="filterOpen = false"
             />
         </div>
-    </DsAppShell>
+    </ScreenShell>
 </template>
 
 <script setup>
 import { ref } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import DsAppShell from '@/Components/Ds/DsAppShell.vue';
+import ScreenShell from './ScreenShell.vue';
 import DsTabs from '@/Components/Ds/DsTabs.vue';
 import DsCard from '@/Components/Ds/DsCard.vue';
 import DsButton from '@/Components/Ds/DsButton.vue';
@@ -131,19 +122,6 @@ import DsCopyButton from '@/Components/Ds/DsCopyButton.vue';
 import DsPagination from '@/Components/Ds/DsPagination.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
-import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
-import DsNotificationMenu from '@/Components/Ds/DsNotificationMenu.vue';
-
-// Сайдбар — те же иконки, что и в Dashboard-эталоне (сверены с Authenticated.vue).
-const nav = [
-    { key: 'dashboard', label: 'Дэшборд', icon: 'fm-layout', href: route('designSystem.screenDashboard') },
-    { key: 'products', label: 'Товары', icon: 'fm-clipboard', href: route('designSystem.screenProducts') },
-    { key: 'expenses', label: 'Расходы', icon: 'fm-credit-card', href: route('designSystem.screenExpenses') },
-    { key: 'redeems', label: 'Самовыкупы', icon: 'fm-rotate-ccw', href: route('designSystem.screenRedeems') },
-    { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: route('designSystem.screenAdvertising') },
-    { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: route('designSystem.screenWarehouse') },
-    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') , submenu: [{ label: 'Общие', href: route('designSystem.screenSettings') }, { label: 'Оплата', href: route('designSystem.screenSettingsBilling') }, { label: 'Пригласи друга', href: route('designSystem.screenSettingsReferral') }] },
-];
 
 const hintOpen = ref(true);
 const tab = ref('products');
@@ -248,12 +226,6 @@ function dim(v) { return v === '-' ? 'muted' : null; }
 </script>
 
 <style scoped>
-/* ── Каркас: лого / топбар / аккаунт (как в Dashboard-эталоне) ── */
-.brand { font-size: var(--font-size-body-s); font-weight: var(--font-weight-bold); color: var(--brand); }
-.topbar { display: inline-flex; align-items: center; gap: var(--size-24); }
-.topbar__page { color: var(--text-heading); }
-.topbar__ico { color: var(--text-muted); font-size: var(--font-size-heading-m); cursor: pointer; }
-
 .screen { display: flex; flex-direction: column; gap: var(--size-16); }
 .hint-thumb { display: block; width: 96px; height: 56px; border-radius: var(--radius-sm); background: var(--brand-gradient); }
 
@@ -300,5 +272,5 @@ function dim(v) { return v === '-' ? 'muted' : null; }
 .date { color: var(--text-default); }
 
 .muted { color: var(--text-muted); }
-.tfoot { display: flex; justify-content: center; }
+.tfoot { display: flex; justify-content: center; padding: var(--size-16) var(--size-12); border-top: 1px solid var(--border-default); }
 </style>

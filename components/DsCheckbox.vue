@@ -1,5 +1,5 @@
 <template>
-    <label class="ds-check" :class="{ 'is-disabled': disabled }">
+    <label class="ds-check" :class="{ 'is-disabled': disabled, 'ds-check--radio': type === 'radio' }">
         <input
             class="ds-check__input"
             :type="type"
@@ -98,6 +98,17 @@ function onChange(e) {
     left: 3px; right: 3px; top: 50%;
     height: 2px; margin-top: -1px;
     background: var(--brand);
+}
+/* Radio без общего name считается :indeterminate, когда не выбран — гасим ложный «минус». */
+.ds-check--radio .ds-check__input:indeterminate ~ .ds-check__box { border-color: var(--border-default); }
+.ds-check--radio .ds-check__input:indeterminate ~ .ds-check__box::after { content: none; }
+/* Radio: отмеченный — залитая точка по центру (а не галочка). */
+.ds-check--radio .ds-check__input:checked ~ .ds-check__box::after {
+    left: 50%; top: 50%;
+    width: 10px; height: 10px;
+    border: 0; border-radius: var(--radius-full);
+    background: var(--brand);
+    transform: translate(-50%, -50%);
 }
 .ds-check__box.is-error { border-color: var(--status-danger); }
 .ds-check__label { color: var(--text-default); }

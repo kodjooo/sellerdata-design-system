@@ -38,7 +38,7 @@
             <nav class="ds-app-shell__nav">
                 <template v-for="item in items" :key="item.key ?? item.label">
                     <!-- Пункт с подменю (напр. Настройки) — поповер со списком страниц -->
-                    <DsPopover v-if="item.submenu && item.submenu.length" placement="bottom-start">
+                    <DsPopover v-if="item.submenu && item.submenu.length" placement="right-start">
                         <span
                             class="ds-app-shell__nav-item"
                             :class="{ 'is-active': isActive(item) }"
@@ -224,6 +224,10 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEsc));
 .ds-app-shell__logo > :deep(*) { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
 .ds-app-shell__nav { display: flex; flex-direction: column; gap: var(--size-4); }
+/* Пункт с submenu обёрнут в триггер DsPopover (inline-flex). Делаем триггер блочным на всю
+   ширину rail, чтобы вложенный пункт (напр. «Настройки») заполнял ширину и центрировался,
+   как обычные пункты-ссылки (иначе он прижимается влево). */
+.ds-app-shell__nav :deep(.ds-popover__trigger) { display: block; width: 100%; }
 
 .ds-app-shell__nav-item {
     display: flex;
@@ -268,6 +272,10 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEsc));
 
 /* ─── Топбар (компактный на мобайле, просторнее ≥md) ──────────── */
 .ds-app-shell__topbar {
+    /* Шапка закрепляется при скролле (десктоп + мобайл); выше sticky-шапок таблиц. */
+    position: sticky;
+    top: 0;
+    z-index: calc(var(--z-sticky, 10) + 5);
     display: flex;
     align-items: center;
     gap: var(--size-12);
@@ -303,7 +311,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', handleEsc));
     @include respond-to(lg) { display: none; }
 }
 
-.ds-app-shell__title { flex: 1 1 auto; min-width: 0; }
+/* Область заголовка тянется на всю высоту топбара; центрирование текста и положение
+   подчёркивания вкладок задаёт ScreenShell (текст по центру, подчёркивание — у нижней линии). */
+.ds-app-shell__title { flex: 1 1 auto; min-width: 0; align-self: stretch; display: flex; align-items: stretch; }
 .ds-app-shell__actions { display: flex; align-items: center; gap: var(--size-12); }
 
 /* Подменю пункта rail (напр. Настройки): список ссылок в поповере */

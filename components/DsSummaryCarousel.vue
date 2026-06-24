@@ -56,7 +56,7 @@
                 :featured-first="featuredFirst"
             >
                 <template v-if="item.footerText" #footer>
-                    <button type="button" class="ds-summary-carousel__more">{{ item.footerText }}</button>
+                    <button type="button" class="ds-summary-carousel__more" @click="$emit('more', item, i)">{{ item.footerText }}</button>
                 </template>
             </DsSummaryCard>
         </div>
@@ -66,6 +66,10 @@
 <script setup>
 import { ref } from 'vue';
 import DsSummaryCard from './DsSummaryCard.vue';
+
+// Клик по «Больше» в футере карточки → emit('more', item, index): страница открывает
+// модалку детализации периода (реал: дашборд__плитка-детализация).
+defineEmits(['more']);
 
 defineProps({
     // Карточки: [{ title, gradient, icon?, metrics: [{label,value}] }].

@@ -33,16 +33,21 @@
         </div>
 
         <!-- Лимит оборота (реал salesLimit) -->
-        <div v-if="limit" class="t-body-s ds-pricing-card__limit">{{ limit }}</div>
+        <div v-if="limit" class="t-body-s ds-pricing-card__limit">
+            <span v-if="rowLabels[0]" class="ds-pricing-card__rowlabel">{{ rowLabels[0] }}</span>
+            <span>{{ limit }}</span>
+        </div>
 
         <!-- Строки фич: первая — число аккаунтов, далее check/minus.
              Можно задать через проп features ([{value?|on}]) либо слотом #features. -->
         <div class="ds-pricing-card__rows">
             <slot name="features">
                 <div v-if="accounts !== null" class="ds-pricing-card__row ds-pricing-card__row--accounts">
-                    {{ accounts }}
+                    <span v-if="rowLabels[1]" class="ds-pricing-card__rowlabel">{{ rowLabels[1] }}</span>
+                    <span>{{ accounts }}</span>
                 </div>
                 <div v-for="(f, i) in normalizedFeatures" :key="i" class="ds-pricing-card__row">
+                    <span v-if="rowLabels[2 + i]" class="ds-pricing-card__rowlabel">{{ rowLabels[2 + i] }}</span>
                     <span
                         v-if="f.value != null"
                         class="t-body-s ds-pricing-card__value"
@@ -103,6 +108,9 @@ const props = defineProps({
     accounts: { type: [String, Number], default: null },
     // Фичи: массив boolean (вкл/выкл = check/minus) ИЛИ объектов { on, value }.
     features: { type: Array, default: () => [] },
+    // Подписи строк [лимит, аккаунты, ...фичи] — показываются ИНЛАЙН на мобайле (<lg),
+    // когда внешняя колонка-метки скрыта. На десктопе скрыты.
+    rowLabels: { type: Array, default: () => [] },
     // Подсветка текущего пакета (реал .current).
     current: { type: Boolean, default: false },
     // Заблокировать кнопку покупки.
@@ -168,6 +176,14 @@ const normalizedFeatures = computed(() =>
 .ds-pricing-card__row--accounts { font-weight: var(--font-weight-semibold); }
 .ds-pricing-card__check { color: var(--text-heading); }
 .ds-pricing-card__minus { color: var(--text-muted); }
+
+/* Инлайн-подпись строки — только на мобайле (<lg), когда внешняя колонка-метки скрыта. */
+.ds-pricing-card__rowlabel { display: none; color: var(--text-default); }
+@media (max-width: 991.98px) {
+    .ds-pricing-card__limit,
+    .ds-pricing-card__row { justify-content: space-between; padding: 0 var(--size-16); text-align: left; }
+    .ds-pricing-card__rowlabel { display: block; }
+}
 
 /* Действия */
 .ds-pricing-card__actions { margin-top: auto; padding: var(--size-16); }

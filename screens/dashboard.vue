@@ -1,23 +1,14 @@
 <template>
     <Head title="Дэшборд — экран-эталон" />
-    <DsAppShell :items="nav" active="dashboard">
-        <template #logo><span class="brand">sellerdata</span></template>
-        <template #title>
-            <span class="topbar">
-                <strong class="t-title-m topbar__page">Дэшборд</strong>
-                <DsTabs v-model="view" :tabs="views" class="topbar__tabs" />
-            </span>
-        </template>
-        <template #actions>
-            <DsIconButton variant="ghost" icon="fm-help-circle" aria-label="Помощь" />
-            <DsNotificationMenu :count="332" />
-            <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
+    <ScreenShell active="dashboard" title="Дэшборд">
+        <template #tabs>
+            <DsTabs v-model="view" :tabs="views" class="topbar__tabs" />
         </template>
 
         <div class="screen">
-            <!-- Вкладки Плитки/Диаграмма: на мобайле отдельной центрированной строкой (реал),
-                 на десктопе — в топбаре рядом с заголовком (см. #title). -->
-            <DsTabs v-model="view" :tabs="views" variant="segmented" class="screen__tabs-mobile" />
+            <!-- Вкладки Плитки/Диаграмма: на мобайле отдельной центрированной строкой (реал —
+                 underline-вкладки текст+иконка), на десктопе — в топбаре рядом с заголовком (#title). -->
+            <DsTabs v-model="view" :tabs="views" class="screen__tabs-mobile" />
 
             <!-- Онбординг-баннер -->
             <DsNotice v-model:visible="hintOpen" tone="plain" collapse-mobile>
@@ -36,12 +27,20 @@
                     </template>
                 </DsSelect>
                 <DsSelect v-model="country" :options="countries" placeholder="Все страны" :show-footer="false" class="bar__country" />
-                <DsButton variant="secondary"><template #iconLeft>⚲</template>Фильтр</DsButton>
-                <DsIconButton icon="fm-calendar" size="lg" aria-label="Период" class="bar__date" />
+                <!-- «Фильтр» — функциональная кнопка: применяет выбранные поиск/страну/период
+                     (на десктопе это НЕ дропдаун; дропдаун-выбор живёт в самих селектах). -->
+                <DsButton variant="secondary" @click="applyFilter"><template #iconLeft>⚲</template>Фильтр</DsButton>
+                <DsIconButton
+                    icon="fm-calendar"
+                    size="lg"
+                    aria-label="Период"
+                    class="bar__date"
+                    @click="view === 'chart' ? (chartFilterOpen = true) : (periodOpen = true)"
+                />
             </div>
 
             <!-- ВЕРХНИЙ БЛОК — переключается вкладками Плитки/Диаграмма -->
-            <DsSummaryCarousel v-if="view === 'grid'" :items="periods" featured-first :card-columns="2">
+            <DsSummaryCarousel v-if="view === 'grid'" :items="periods" featured-first :card-columns="2" @more="openDetail">
                 <template #tabs-action>
                     <DsIconButton icon="fm-filter" aria-label="Фильтр" @click="filterOpen = true" />
                 </template>
@@ -59,31 +58,15 @@
             <!-- ТАБЛИЦА ТОВАРОВ — тулбар (табы/действия) ВХОДИТ в белую карточку таблицы (реал table-tabs) -->
             <DsCard radius="md" padding="--size-2" bleed-mobile>
                 <div class="tbar">
-                    <DsTabs v-model="metric" :tabs="metricTabs" />
+                    <DsTabs v-model="metric" :tabs="metricTabs" size="lg" />
                     <div class="tbar__right">
-                        <button type="button" class="tbar__link fm-download"> Скачать таблицу (.xls)</button>
-                        <span class="tbar__group">
-                            <span class="tbar__group-label">Группировать по</span>
-                            <DsPopover placement="bottom-end">
-                                <button type="button" class="tbar__group-value">{{ group }}<span class="fm-chevron-down" aria-hidden="true"></span></button>
-                                <template #content="{ close }">
-                                    <div class="group-menu">
-                                        <button
-                                            v-for="g in groups"
-                                            :key="g"
-                                            type="button"
-                                            class="group-menu__item"
-                                            :class="{ 'is-active': g === group }"
-                                            @click="group = g; close();"
-                                        >{{ g }}</button>
-                                    </div>
-                                </template>
-                            </DsPopover>
-                        </span>
+                        <button type="button" class="tbar__link fm-download"><span class="tbar__link-text"> Скачать таблицу (.xls)</span></button>
+                        <DsGroupBy v-model="group" :options="groups" />
                     </div>
                 </div>
                 <DsTable
                     :columns="cols" :rows="rows" row-key="id" expandable default-sort-key="profit"
+                    numeric-align="left"
                     mobile-mode="compact" :mobile-columns="['name', 'lead', 'profit', 'info']" :mobile-detail="false"
                     group-key="isGroup"
                 >
@@ -92,23 +75,36 @@
                         <DsProductCell
                             v-else
                             :name="row.name"
-                            :copy-id="row.isVariant ? '' : row.nm"
-                            :detail="!row.isVariant"
+                            :copy-id="row.isVariant ? row.barcode : row.nm"
+                            :copy-href="row.isVariant ? '' : `https://www.wildberries.ru/catalog/${row.nm}/detail.aspx`"
+                            :sub="row.isVariant ? row.variantMeta : (row.color ? `/ ${row.color}` : '')"
+                            :detail="!row.isVariant && !(row.children && row.children.length)"
                             :hide-thumb="row.isVariant"
                         />
                     </template>
-                    <template #cell-profit="{ row }">
-                        <span :class="neg(row.profit) ? 'neg' : 'pos'">{{ row.profit }}</span>
+                    <template #cell-profit="{ row }">{{ row.profit }}</template>
+                    <template #cell-order="{ row }">
+                        <span v-if="!row.isGroup" class="order-id">{{ row.order }}</span>
                     </template>
-                    <template #cell-info>
-                        <button type="button" class="more-btn fm-chevron-right" aria-label="Подробнее"></button>
+                    <template #cell-status="{ row }">
+                        <DsTag v-if="!row.isGroup" tone="success">Доставлен</DsTag>
+                    </template>
+                    <template #cell-info="{ row }">
+                        <!-- Стрелка-деталь «›» (атом DsIconButton link) — на ВСЕХ строках,
+                             включая аккордеон-родители и варианты (реал). -->
+                        <DsIconButton
+                            icon="fm-chevron-right"
+                            size="md"
+                            variant="link"
+                            block
+                            aria-label="Подробнее"
+                        />
                     </template>
                 </DsTable>
+                <div class="tfoot">
+                    <DsPagination :page="page" :total="690" :per-page="50" @change="p => page = p" />
+                </div>
             </DsCard>
-
-            <div class="tfoot">
-                <DsPagination :page="page" :total="690" :per-page="50" @change="p => page = p" />
-            </div>
 
             <!-- Мобильный фильтр: full-screen лист (реал /dashboard мобайл — воронка) -->
             <DsFilterSheet
@@ -117,14 +113,71 @@
                 @reset="filterOpen = false"
                 @apply="filterOpen = false"
             />
+
+            <!-- Модалка периода (таблица/плитки): пресет-список в 2 колонки + произвольный период -->
+            <DsModal v-model="periodOpen" title="Период" size="md">
+                <div class="period-grid">
+                    <button
+                        v-for="p in periodPresets"
+                        :key="p.key"
+                        type="button"
+                        class="radio-item"
+                        :class="{ 'is-active': p.key === periodPreset }"
+                        @click="periodPreset = p.key"
+                    >
+                        <span class="radio-item__main">{{ p.label }}</span>
+                        <span v-if="p.key === periodPreset" class="radio-item__check fm-check" aria-hidden="true"></span>
+                    </button>
+                    <!-- Произвольный период — карточка во всю ширину (реал) -->
+                    <button
+                        type="button"
+                        class="radio-item radio-item--wide"
+                        :class="{ 'is-active': periodPreset === 'custom' }"
+                        @click="periodPreset = 'custom'"
+                    >
+                        <span class="radio-item__check-left fm-check" aria-hidden="true"></span>
+                        <span class="radio-item__main">Произвольный период</span>
+                    </button>
+                </div>
+                <div class="modal-cta">
+                    <DsButton variant="primary" @click="periodOpen = false">Фильтровать</DsButton>
+                </div>
+            </DsModal>
+
+            <!-- Модалка фильтра диаграммы: радио-выбор гранулярности графика -->
+            <DsModal v-model="chartFilterOpen" title="Период" size="sm">
+                <div class="radio-list">
+                    <button
+                        v-for="o in chartGranOptions"
+                        :key="o.key"
+                        type="button"
+                        class="radio-item"
+                        :class="{ 'is-active': o.key === chartGran }"
+                        @click="chartGran = o.key"
+                    >
+                        <span class="radio-item__main">{{ o.label }}</span>
+                        <span v-if="o.key === chartGran" class="radio-item__check fm-check" aria-hidden="true"></span>
+                    </button>
+                </div>
+                <div class="modal-cta">
+                    <DsButton variant="primary" @click="chartFilterOpen = false">Фильтровать</DsButton>
+                </div>
+            </DsModal>
+
+            <!-- Модалка детализации плитки периода («Больше») — канон-паттерн «Деталь-модалка» -->
+            <!-- Деталь-модалка плитки периода («Больше»): реал ≈460 (modal-basic sm), не 600. -->
+            <DsModal v-model="detailOpen" :title="detailTitle" size="sm">
+                <p v-if="detailSubtitle" class="detail-date t-caption">{{ detailSubtitle }}</p>
+                <DsInfoList :items="detailItems" :default-open="[0]" />
+            </DsModal>
         </div>
-    </DsAppShell>
+    </ScreenShell>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import DsAppShell from '@/Components/Ds/DsAppShell.vue';
+import ScreenShell from './ScreenShell.vue';
 import DsSummaryCard from '@/Components/Ds/DsSummaryCard.vue';
 import DsSummaryCarousel from '@/Components/Ds/DsSummaryCarousel.vue';
 import DsTabs from '@/Components/Ds/DsTabs.vue';
@@ -138,21 +191,10 @@ import DsPagination from '@/Components/Ds/DsPagination.vue';
 import DsProductCell from '@/Components/Ds/DsProductCell.vue';
 import DsInfoList from '@/Components/Ds/DsInfoList.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
-import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
-import DsNotificationMenu from '@/Components/Ds/DsNotificationMenu.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
-import DsPopover from '@/Components/Ds/DsPopover.vue';
-
-// Иконки сверены с реальным сайдбаром (Authenticated.vue).
-const nav = [
-    { key: 'dashboard', label: 'Дэшборд', icon: 'fm-layout', href: route('designSystem.screenDashboard') },
-    { key: 'products', label: 'Товары', icon: 'fm-clipboard', href: route('designSystem.screenProducts') },
-    { key: 'expenses', label: 'Расходы', icon: 'fm-credit-card', href: route('designSystem.screenExpenses') },
-    { key: 'redeems', label: 'Самовыкупы', icon: 'fm-rotate-ccw', href: route('designSystem.screenRedeems') },
-    { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: route('designSystem.screenAdvertising') },
-    { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: route('designSystem.screenWarehouse') },
-    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') , submenu: [{ label: 'Общие', href: route('designSystem.screenSettings') }, { label: 'Оплата', href: route('designSystem.screenSettingsBilling') }, { label: 'Пригласи друга', href: route('designSystem.screenSettingsReferral') }] },
-];
+import DsGroupBy from '@/Components/Ds/DsGroupBy.vue';
+import DsModal from '@/Components/Ds/DsModal.vue';
+import DsTag from '@/Components/Ds/DsTag.vue';
 
 const hintOpen = ref(true);
 const view = ref('grid');
@@ -176,6 +218,64 @@ const filterItems = [
     { key: 'filter', label: 'Фильтр', icon: 'fm-filter' },
     { key: 'period', label: 'Период', icon: 'fm-box' },
 ];
+// «Фильтр» применяет выбранные поиск/страну/период к данным (в эталоне — заглушка).
+function applyFilter() { /* применить выбранные фильтры к таблице/сводке */ }
+
+// ── Модалка периода (кнопка-календарь в тулбаре) ──
+// Пресеты периода: парный список (название + диапазон), как в реале (модалка-период).
+const periodOpen = ref(false);
+// Пресеты периода = НАБОРЫ из 4 периодов (для 4 плиток дэшборда), как в реале (модалка «Период»).
+const periodPresets = [
+    { key: 'p1', label: 'Сегодня / Вчера / Текущий месяц / Прошлый месяц' },
+    { key: 'p2', label: 'Сегодня / Вчера / 7 дней / 30 дней' },
+    { key: 'p3', label: 'Текущая неделя / Прошлая неделя / 2 недели назад / 3 недели назад' },
+    { key: 'p4', label: 'Текущий месяц / Прошлый месяц / 2 месяца назад / 3 месяца назад' },
+    { key: 'p5', label: 'Сегодня / Вчера / 2 дня назад / 3 дня назад' },
+    { key: 'p6', label: 'Сегодня / Вчера / 7 дней / 8 дней назад' },
+];
+const periodPreset = ref('p1');
+
+// ── Модалка фильтра диаграммы (вкладка «Диаграмма») ──
+// Радио-выбор гранулярности графика, как в реале (диаграмма__модалка-фильтр).
+const chartFilterOpen = ref(false);
+const chartGranOptions = [
+    { key: 'm12', label: 'Последние 12 месяцев, по месяцам' },
+    { key: 'w13', label: 'Последние 3 месяца, по неделям' },
+    { key: 'd30', label: 'Последние 30 дней, по дням' },
+];
+const chartGran = ref('m12');
+
+// ── Модалка детализации плитки периода («Больше») ──
+// Реал: дашборд__плитка-детализация — модалка с полной разбивкой показателей периода.
+const detailOpen = ref(false);
+const detailTitle = ref('');
+const detailSubtitle = ref('');
+const detailItems = ref([]);
+function openDetail(item) {
+    detailTitle.value = item.title;
+    detailSubtitle.value = item.subtitle || '';
+    // Разбивка периода — по канон-паттерну «Деталь-модалка» (Patterns.vue): раскрываемые
+    // строки с children, Прибыль — strong+info, коэффициенты внизу — bg.
+    const m = Object.fromEntries((item.metrics || []).map((x) => [x.label, x.value]));
+    detailItems.value = [
+        { label: 'Продажи', value: m['Продажи'] || '—', children: [{ label: 'Количество товаров', value: '1 332' }, { label: 'Продажи со скидкой', value: m['Продажи'] || '—' }] },
+        { label: 'Возвраты', value: m['Возвраты'] || '—', children: [{ label: 'Количество возвратов', value: '38' }] },
+        { label: 'Удержания', value: '−1 681 132,55 ₽', children: [{ label: 'Логистика', value: '−1 184 200,00 ₽' }, { label: 'Комиссия', value: '−496 932,55 ₽' }] },
+        { label: 'Реклама', value: '−6 909,26 ₽', children: [{ label: 'Авто-реклама', value: '−6 909,26 ₽' }] },
+        { label: 'Себестоимость', value: '−1 600,00 ₽' },
+        { label: 'Валовая прибыль', value: '1 495 561,42 ₽' },
+        { label: 'Расходы', value: '0,00 ₽' },
+        { label: 'НДС', value: '−85 428,07 ₽', info: true },
+        { label: 'Налог на доход', value: '−102 513,68 ₽' },
+        { label: 'Прибыль', value: m['Прибыль'] || '—', info: true, strong: true },
+        { label: 'Сумма выплат', value: m['Сумма выплат'] || '—' },
+        { label: 'Маржа', value: '41,05 %', bg: true },
+        { label: 'ROI', value: '81 726,23 %', bg: true },
+        { label: 'ДРР', value: '0,21 %', bg: true },
+        { label: 'Выкупаемость', value: '90,86 %', bg: true },
+    ];
+    detailOpen.value = true;
+}
 
 // ── Период-карточки (реальные числа account 4) ──
 const periods = [
@@ -221,16 +321,26 @@ const summary = [
 ];
 
 // ── Таблица товаров ──
-const metric = ref('orders');
-const metricTabs = [{ key: 'sales', label: 'Продажи' }, { key: 'orders', label: 'Заказы' }];
+// Дефолтная вкладка = «Продажи» (реал /dashboard открывается на Продажах: lead «Продано», 14 колонок).
+const metric = ref('sales');
+const metricTabs = [{ key: 'sales', label: 'Продажи', icon: 'fm-clipboard' }, { key: 'orders', label: 'Заказы', icon: 'fm-shopping-cart' }];
 const group = ref('Артикулу');
-const groups = ['Не группировать', 'Артикулу', 'Бренду'];
+// Опции группировки зависят от вкладки (сверено с живым select продукта):
+//  • Продажи: Не группировать / Артикулу / Бренду;
+//  • Заказы:  Не группировать / Заказам / Артикулу.
+const groups = computed(() => (metric.value === 'orders'
+    ? ['Не группировать', 'Заказам', 'Артикулу']
+    : ['Не группировать', 'Артикулу', 'Бренду']));
+// При смене вкладки сбрасываем недопустимую для неё группировку на «Артикулу».
+watch(metric, () => { if (!groups.value.includes(group.value)) group.value = 'Артикулу'; });
 const page = ref(1);
 
-// Колонки зависят от вкладки Продажи/Заказы (реал: «Продажи» — полный набор).
+// Колонки зависят от вкладки Продажи/Заказы. Состав сверен с живым продуктом:
+//  • Продажи: …, Маржа, ROI, ДРР, Выкупаемость, Инфо (без Статус);
+//  • Заказы:  …, Маржа, ROI, Статус, Инфо (без ДРР/Выкупаемость).
 const baseCols = [
-    { key: 'name', label: 'Товар', width: '22%' },
-    { key: 'lead', label: 'Заказано', numeric: true, sortable: true },          // переопределяется
+    { key: 'name', label: 'Товары', width: '22%' },                              // label переопределяется
+    { key: 'lead', label: 'Продано', numeric: true, sortable: true },            // label переопределяется
     { key: 'returned', label: 'Возвращено', numeric: true, sortable: true },
     { key: 'sales', label: 'Продажи', numeric: true, sortable: true },
     { key: 'refunds', label: 'Возвраты', numeric: true, sortable: true },
@@ -242,28 +352,49 @@ const baseCols = [
     { key: 'roi', label: 'ROI', numeric: true, sortable: true },
     { key: 'drr', label: 'ДРР', numeric: true, sortable: true },
     { key: 'redemption', label: 'Выкупаемость', numeric: true, sortable: true },
-    { key: 'info', label: 'Инфо', align: 'center', width: 'var(--size-48)' },
+    { key: 'status', label: 'Статус', align: 'center' },
+    { key: 'info', label: 'Инфо', align: 'center', width: 'var(--size-64)' },
 ];
+// Набор колонок зависит от вкладки И группировки (точно сверено с живым продуктом):
+//  • Продажи (любая группировка): 14 кол — …Маржа, ROI, ДРР, Выкупаемость, Инфо; имя «Товары».
+//  • Заказы / Не группировать: 10 кол — без Маржа/ROI/ДРР/Выкупаемость/Статус; имя «Товар».
+//  • Заказы / Артикулу: 13 кол — …Маржа, ROI, Статус, Инфо; имя-колонка «Заказы».
+//  • Заказы / Заказам: 14 кол — префикс-колонка «Заказ», далее как Артикулу с именем «Товар».
 const cols = computed(() => {
-    const lead = { ...baseCols[1], label: metric.value === 'orders' ? 'Заказано' : 'Продано' };
-    if (metric.value === 'orders') {
-        // Заказы: без Реклама/Маржа/ROI/ДРР/Выкупаемость
-        const drop = new Set(['ads', 'margin', 'roi', 'drr', 'redemption']);
-        return [baseCols[0], lead, ...baseCols.slice(2).filter((c) => !drop.has(c.key))];
+    const orders = metric.value === 'orders';
+    if (!orders) {
+        const name = { ...baseCols[0], label: 'Товары' };
+        const lead = { ...baseCols[1], label: 'Продано' };
+        return [name, lead, ...baseCols.slice(2).filter((c) => c.key !== 'status')];
     }
-    return [baseCols[0], lead, ...baseCols.slice(2)];
+    const lead = { ...baseCols[1], label: 'Заказано' };
+    const g = group.value;
+    let prefix = [];
+    let nameLabel = 'Товар';
+    // В Заказах никогда нет ДРР/Выкупаемости; набор остальных зависит от группировки.
+    let drop = new Set(['drr', 'redemption']);
+    if (g === 'Заказам') {
+        prefix = [{ key: 'order', label: 'Заказ' }];
+    } else if (g === 'Артикулу') {
+        nameLabel = 'Заказы';
+    } else {
+        // Не группировать: без Маржа/ROI/Статус.
+        drop = new Set(['drr', 'redemption', 'margin', 'roi', 'status']);
+    }
+    const name = { ...baseCols[0], label: nameLabel };
+    return [...prefix, name, lead, ...baseCols.slice(2).filter((c) => !drop.has(c.key))];
 });
 
 const products = [
-    { id: 1, name: 'Капли для носа', nm: '200405', lead: '60', returned: '2', sales: '0,00 ₽', refunds: '−598,00 ₽', deduction: '−3 845,15 ₽', ads: '0,00 ₽', profit: '6 928,46 ₽', profitUnit: '177,65 ₽', margin: '64,82 %', roi: '291,06 %', drr: '0,00 %', redemption: '96,7 %',
+    { id: 1, name: 'Капли для носа', nm: '200405', color: 'прозрачный', order: '178210367', lead: '60', returned: '2', sales: '0,00 ₽', refunds: '−598,00 ₽', deduction: '−3 845,15 ₽', ads: '0,00 ₽', profit: '6 928,46 ₽', profitUnit: '177,65 ₽', margin: '64,82 %', roi: '291,06 %', drr: '0,00 %', redemption: '96,7 %',
       children: [
-        { id: '1a', isVariant: true, name: 'Размер S', lead: '28', returned: '1', sales: '0,00 ₽', refunds: '−299,00 ₽', deduction: '−1 922,00 ₽', ads: '0,00 ₽', profit: '3 460,00 ₽', profitUnit: '178,00 ₽', margin: '64,8 %', roi: '290,0 %', drr: '0,00 %', redemption: '96,4 %' },
-        { id: '1b', isVariant: true, name: 'Размер M', lead: '32', returned: '1', sales: '0,00 ₽', refunds: '−299,00 ₽', deduction: '−1 923,15 ₽', ads: '0,00 ₽', profit: '3 468,46 ₽', profitUnit: '177,30 ₽', margin: '64,9 %', roi: '292,0 %', drr: '0,00 %', redemption: '97,0 %' },
+        { id: '1a', isVariant: true, name: 'Размер S', barcode: '2047488172889', variantMeta: '/ Размер: S / Цена: 199,00 ₽ / Себест.: 70 ₽', lead: '28', returned: '1', sales: '0,00 ₽', refunds: '−299,00 ₽', deduction: '−1 922,00 ₽', ads: '0,00 ₽', profit: '3 460,00 ₽', profitUnit: '178,00 ₽', margin: '64,8 %', roi: '290,0 %', drr: '0,00 %', redemption: '96,4 %' },
+        { id: '1b', isVariant: true, name: 'Размер M', barcode: '2047488172896', variantMeta: '/ Размер: M / Цена: 199,00 ₽ / Себест.: 70 ₽', lead: '32', returned: '1', sales: '0,00 ₽', refunds: '−299,00 ₽', deduction: '−1 923,15 ₽', ads: '0,00 ₽', profit: '3 468,46 ₽', profitUnit: '177,30 ₽', margin: '64,9 %', roi: '292,0 %', drr: '0,00 %', redemption: '97,0 %' },
       ] },
-    { id: 2, name: 'Масло для массажа', nm: '325546', lead: '71', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−21 923,60 ₽', ads: '0,00 ₽', profit: '16 825,92 ₽', profitUnit: '431,43 ₽', margin: '64,35 %', roi: '210,4 %', drr: '0,00 %', redemption: '98,1 %' },
-    { id: 3, name: 'Маска для сна', nm: '116018', lead: '61', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−2 235,38 ₽', ads: '0,00 ₽', profit: '4 027,31 ₽', profitUnit: '149,16 ₽', margin: '64,82 %', roi: '188,2 %', drr: '0,00 %', redemption: '95,3 %' },
-    { id: 4, name: 'Соска-пустышка', nm: '156004', lead: '33', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−29 895,15 ₽', ads: '0,00 ₽', profit: '28 026,09 ₽', profitUnit: '1 077,93 ₽', margin: '64,29 %', roi: '171,0 %', drr: '0,00 %', redemption: '94,9 %' },
-    { id: 5, name: 'Штора для душа', nm: '702202', lead: '28', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−19 288,96 ₽', ads: '0,00 ₽', profit: '19 215,98 ₽', profitUnit: '768,64 ₽', margin: '64,40 %', roi: '180,5 %', drr: '0,00 %', redemption: '93,1 %' },
+    { id: 2, name: 'Масло для массажа', nm: '325546', color: 'белый', order: '178210412', lead: '71', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−21 923,60 ₽', ads: '0,00 ₽', profit: '16 825,92 ₽', profitUnit: '431,43 ₽', margin: '64,35 %', roi: '210,4 %', drr: '0,00 %', redemption: '98,1 %' },
+    { id: 3, name: 'Маска для сна', nm: '116018', color: 'чёрный', order: '178210488', lead: '61', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−2 235,38 ₽', ads: '0,00 ₽', profit: '4 027,31 ₽', profitUnit: '149,16 ₽', margin: '64,82 %', roi: '188,2 %', drr: '0,00 %', redemption: '95,3 %' },
+    { id: 4, name: 'Соска-пустышка', nm: '156004', color: 'розовый', order: '178210531', lead: '33', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−29 895,15 ₽', ads: '0,00 ₽', profit: '28 026,09 ₽', profitUnit: '1 077,93 ₽', margin: '64,29 %', roi: '171,0 %', drr: '0,00 %', redemption: '94,9 %' },
+    { id: 5, name: 'Штора для душа', nm: '702202', color: 'голубой', order: '178210566', lead: '28', returned: '0', sales: '0,00 ₽', refunds: '0,00 ₽', deduction: '−19 288,96 ₽', ads: '0,00 ₽', profit: '19 215,98 ₽', profitUnit: '768,64 ₽', margin: '64,40 %', roi: '180,5 %', drr: '0,00 %', redemption: '93,1 %' },
 ];
 
 // Группировка по бренду: строки-группы с суммой и раскрытием в товары (реал «Группировать по бренду»).
@@ -278,19 +409,10 @@ const brandGroups = [
 
 // Итоговый набор строк зависит от выбора «Группировать по».
 const rows = computed(() => (group.value === 'Бренду' ? brandGroups : products));
-
-function neg(v) { return typeof v === 'string' && v.includes('−'); }
 </script>
 
 <style scoped>
-/* ── Каркас: лого / топбар / аккаунт ── */
-.brand { font-size: var(--font-size-body-s); font-weight: var(--font-weight-bold); color: var(--brand); }
-/* Заголовок + вкладки прижаты к низу топбара: подчёркивание вкладок — по нижней линии (реал) */
-.topbar { display: inline-flex; align-self: stretch; align-items: flex-end; gap: var(--size-24); }
-.topbar__page { color: var(--text-heading); padding-bottom: var(--size-8); }
-.topbar__tabs { margin-bottom: calc(var(--size-20) * -1); }
-.topbar__ico { color: var(--text-muted); font-size: var(--font-size-heading-m); cursor: pointer; }
-
+/* Каркас/топбар/лого — в ScreenShell. Здесь только контент страницы. */
 /* Без своего паддинга — отступ страницы задаёт AppShell content. */
 .screen { display: flex; flex-direction: column; gap: var(--size-16); }
 
@@ -299,16 +421,33 @@ function neg(v) { return typeof v === 'string' && v.includes('−'); }
 /* Вкладки Плитки/Диаграмма: десктоп — в топбаре, мобайл — отдельная центрированная строка */
 .screen__tabs-mobile { display: none; }
 @media (max-width: 767.98px) {
-    .topbar__tabs { display: none; }
-    .screen__tabs-mobile { display: flex; justify-content: center; }
+    /* Вкладки Плитки/Диаграмма — часть шапки: белый фон, full-bleed, закреплены под топбаром. */
+    .screen__tabs-mobile {
+        display: flex;
+        position: sticky;
+        top: calc(var(--control-height-lg) + var(--size-8));   /* высота топбара ≈57 */
+        z-index: calc(var(--z-sticky, 10) + 3);   /* выше sticky-шапки таблицы, чтобы не перекрывала */
+        background: var(--surface-default);
+        margin: calc(-1 * var(--size-16)) calc(-1 * var(--size-16)) 0;   /* full-bleed + убрать верхний gap */
+        padding: 0 var(--size-16);
+        border-bottom: 1px solid var(--border-default);
+    }
+    /* Вкладки Плитки/Диаграмма: во всю ширину, 2 равные колонки, иконка над текстом (реал). */
+    .screen__tabs-mobile :deep(.ds-tabs) { width: 100%; border-bottom: 0; }
+    .screen__tabs-mobile :deep(.ds-tabs__tab) {
+        flex: 1 1 0; flex-direction: column; gap: var(--size-4);
+        padding: var(--size-12) 0; justify-content: center;
+    }
+    .screen__tabs-mobile :deep(.ds-tabs__ico) { font-size: var(--font-size-heading-m); }
 }
 
 /* Верхний тулбар */
 .bar { display: flex; align-items: center; gap: var(--size-16); }
 .bar__search { flex: 1 1 auto; max-width: 640px; }
 .bar__country { width: 140px; max-width: 100%; }
-/* Кнопка периода — круглая 48×48 (реал dashboard-nav__btn: 50%, brand) */
-.bar__date { width: var(--size-48); height: var(--size-48); border: 0; border-radius: var(--radius-full); background: var(--brand); color: var(--white); cursor: pointer; margin-left: auto; display: inline-flex; align-items: center; justify-content: center; }
+/* Кнопка периода — круглая, brand (реал dashboard-nav__btn ≈38×38, 50%; берём канон --size-40) */
+/* Период-кнопка — атом DsIconButton size=lg (48, brand, круг); здесь только прижим вправо (реал 48×48). */
+.bar__date { margin-left: auto; }
 /* Мобайл: тулбар поиска/фильтра/периода уходит в воронку (в ряду табов сводки) */
 @media (max-width: 767.98px) { .bar { display: none; } }
 
@@ -330,19 +469,49 @@ function neg(v) { return typeof v === 'string' && v.includes('−'); }
 .tbar { display: flex; align-items: center; justify-content: space-between; gap: var(--size-16); flex-wrap: wrap; padding: 0 var(--size-12); border-bottom: 1px solid var(--border-default); }
 .tbar__right { display: flex; align-items: center; gap: var(--size-16); flex-wrap: wrap; }
 .tbar__link { border: 0; background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; display: inline-flex; align-items: center; gap: var(--size-4); }
-/* «Группировать по <значение>» — label + значение-ссылка (реал: без рамки, не селект) */
-.tbar__group { display: inline-flex; align-items: center; gap: var(--size-4); font-size: var(--font-size-body-s); }
-.tbar__group-label { color: var(--text-default); }
-.tbar__group-value { border: 0; background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; display: inline-flex; align-items: center; gap: var(--size-4); }
-/* Меню выбора группировки (поповер) */
-.group-menu { display: flex; flex-direction: column; min-width: calc(var(--size-128) * 1.2); }
-.group-menu__item { display: block; width: 100%; padding: var(--size-8) var(--size-12); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text-default); text-align: left; cursor: pointer; font-size: var(--font-size-body-s); }
-.group-menu__item:hover { background: var(--surface-muted); }
-.group-menu__item.is-active { color: var(--brand); font-weight: var(--font-weight-semibold); }
+/* Мобайл: тулбар таблицы компактный — метрик-вкладки и «Скачать» только иконками, одна строка (реал). */
+@media (max-width: 767.98px) {
+    .tbar { flex-wrap: nowrap; gap: var(--size-8); }
+    .tbar :deep(.ds-tabs) { gap: var(--size-8); }
+    .tbar :deep(.ds-tabs__text) { display: none; }
+    .tbar__right { flex-wrap: nowrap; gap: var(--size-8); }
+    .tbar__link-text { display: none; }
+}
 
-.more-btn { border: 0; background: transparent; color: var(--text-muted); font-size: var(--font-size-title-m); line-height: 1; cursor: pointer; }
-.more-btn:hover { color: var(--brand); }
-.pos { color: var(--accent-positive); }
-.neg { color: var(--status-danger); }
-.tfoot { display: flex; justify-content: center; }
+.order-id { color: var(--brand); font-size: var(--font-size-body-s); }
+/* Пагинация внутри карточки таблицы (реал: ряд под таблицей, разделитель сверху). */
+.tfoot { display: flex; justify-content: center; padding: var(--size-16) var(--size-12); border-top: 1px solid var(--border-default); }
+
+/* ── Модалки периода / фильтра диаграммы ── */
+/* Список пресетов периода: 2 колонки на десктопе, 1 на мобайле */
+.period-grid { display: grid; grid-template-columns: 1fr; gap: var(--size-8); }
+@media (min-width: 768px) { .period-grid { grid-template-columns: 1fr 1fr; } }
+.radio-list { display: flex; flex-direction: column; gap: var(--size-8); }
+
+/* Радио-пункт (кандидат на вынос в DsRadioGroup): рамка → активный = brand-фон + галочка */
+.radio-item {
+    position: relative; display: flex; flex-direction: column; gap: var(--size-2);
+    width: 100%; padding: var(--size-12) var(--size-16); padding-right: var(--size-32);
+    border: 1px solid var(--border-default); border-radius: var(--radius-sm);
+    background: var(--surface-default); color: var(--text-default);
+    text-align: left; cursor: pointer;
+    transition: border-color var(--transition-fast) var(--ease-standard),
+                background-color var(--transition-fast) var(--ease-standard);
+}
+.radio-item:hover { border-color: var(--brand); }
+.radio-item.is-active { background: var(--brand); border-color: var(--brand); color: var(--text-on-brand); }
+.radio-item__main { font-size: var(--font-size-body-s); white-space: normal; }
+/* «Произвольный период» — карточка во всю ширину, галочка слева (реал) */
+.radio-item--wide { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: var(--size-8); padding-right: var(--size-16); }
+.radio-item__check-left { flex: 0 0 auto; color: var(--text-placeholder); }
+.radio-item--wide.is-active .radio-item__check-left { color: var(--text-on-brand); }
+.radio-item__sub { font-size: var(--font-size-caption); opacity: var(--opacity-hover); }
+.radio-item__check { position: absolute; top: 50%; right: var(--size-12); transform: translateY(-50%); color: var(--text-on-brand); }
+
+.period-custom { margin-top: var(--size-12); border: 0; background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; }
+
+/* CTA модалок — кнопка во всю ширину (реал «Фильтровать») */
+.modal-cta { margin-top: var(--size-20); }
+.modal-cta :deep(.ds-btn) { width: 100%; }
+.detail-date { color: var(--text-muted); margin: 0 0 var(--size-12); }
 </style>

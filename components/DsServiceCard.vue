@@ -118,7 +118,8 @@ defineEmits(['order']);
     font-weight: var(--font-weight-bold);
     color: var(--text-heading);
 }
-.ds-service-card__price.is-free { color: var(--accent-positive); }
+/* «Бесплатно» — стандартный цвет заголовка (реал чёрный), не зелёный. */
+.ds-service-card__price.is-free { color: var(--text-heading); }
 .ds-service-card__price-suffix {
     font-size: var(--font-size-body-s);
     font-weight: var(--font-weight-regular);

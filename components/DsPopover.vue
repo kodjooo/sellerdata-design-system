@@ -32,7 +32,7 @@ const props = defineProps({
     placement: {
         type: String,
         default: 'bottom-start',
-        validator: (v) => ['bottom-start', 'bottom-end', 'top-start', 'top-end'].includes(v),
+        validator: (v) => ['bottom-start', 'bottom-end', 'top-start', 'top-end', 'right-start', 'right-end'].includes(v),
     },
     // Внешнее управление видимостью (v-model:open).
     open: { type: Boolean, default: false },
@@ -62,18 +62,28 @@ function updatePosition() {
     const trigger = triggerEl.value;
     if (!trigger) return;
     const r = trigger.getBoundingClientRect();
-    const top = props.placement.startsWith('top');
-    const end = props.placement.endsWith('end');
     const style = { position: 'fixed' };
-    if (top) {
-        style.bottom = `${window.innerHeight - r.top + 4}px`;
+    if (props.placement.startsWith('right')) {
+        // Флайаут вправо от триггера (напр. submenu rail «Настройки»).
+        style.left = `${r.right + 4}px`;
+        if (props.placement.endsWith('end')) {
+            style.bottom = `${window.innerHeight - r.bottom}px`;
+        } else {
+            style.top = `${r.top}px`;
+        }
     } else {
-        style.top = `${r.bottom + 4}px`;
-    }
-    if (end) {
-        style.right = `${window.innerWidth - r.right}px`;
-    } else {
-        style.left = `${r.left}px`;
+        const top = props.placement.startsWith('top');
+        const end = props.placement.endsWith('end');
+        if (top) {
+            style.bottom = `${window.innerHeight - r.top + 4}px`;
+        } else {
+            style.top = `${r.bottom + 4}px`;
+        }
+        if (end) {
+            style.right = `${window.innerWidth - r.right}px`;
+        } else {
+            style.left = `${r.left}px`;
+        }
     }
     panelStyle.value = style;
 }
@@ -116,7 +126,8 @@ defineExpose({ close });
     border: 1px solid var(--border-default);
     border-radius: var(--radius-md);
     background: var(--surface-default);
-    box-shadow: var(--shadow-card);
+    /* Меню/дропдаун — выраженная тень (реал dropdown), а не слабая card-тень. */
+    box-shadow: var(--shadow-dropdown);
 }
 
 .ds-popover-enter-active, .ds-popover-leave-active {

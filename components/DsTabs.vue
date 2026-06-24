@@ -3,7 +3,7 @@
         DsTabs — текстовые вкладки (реал .header-tabs__btn): 13px, активная = brand-текст
         + нижняя brand-полоса (--border-width-accent). Без заливки/pill.
     -->
-    <div class="ds-tabs" :class="`ds-tabs--${variant}`" role="tablist">
+    <div class="ds-tabs" :class="[`ds-tabs--${variant}`, `ds-tabs--${size}`]" role="tablist">
         <button
             v-for="t in tabs"
             :key="t.key ?? t.label"
@@ -28,6 +28,8 @@ defineProps({
     modelValue: { type: [String, Number], default: '' },
     // Вид: underline (текст + нижняя полоса, default) | segmented (пилюли, активная — заливка brand).
     variant: { type: String, default: 'underline', validator: (v) => ['underline', 'segmented'].includes(v) },
+    // Размер: md (default) | lg — высокий ряд табов внутри карточки таблицы (реал table-tabs ≈50px).
+    size: { type: String, default: 'md', validator: (v) => ['md', 'lg'].includes(v) },
 });
 defineEmits(['update:modelValue']);
 </script>
@@ -53,6 +55,10 @@ defineEmits(['update:modelValue']);
     transition: color var(--transition-base) var(--ease-standard);
 }
 .ds-tabs__ico { font-size: var(--font-size-title-m); }
+
+/* ─── Размер lg: высокий ряд табов (реал table-tabs ≈50px) ─── */
+.ds-tabs--lg .ds-tabs__tab { padding: var(--size-16) 0; }
+.ds-tabs--lg .ds-tabs__ico { font-size: var(--size-16); }
 .ds-tabs__tab::after {
     content: '';
     position: absolute;

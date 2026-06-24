@@ -128,6 +128,7 @@ export const SEMANTIC = [
     {
         group: 'Accent',
         tokens: [
+            { name: '--accent-pink',        ref: '#FF5B9C',     note: 'Акцент-розовый (бейдж «+1» промо «Пригласи друга»).' },
             { name: '--accent-positive',    ref: '--green-600', note: 'Положительный аксент (account-icon, success-tag).' },
             { name: '--accent-positive-bg', ref: '--green-50',  note: 'Светлый фон для positive-блоков.' },
         ],
@@ -193,6 +194,7 @@ export const SHADOWS = [
     { name: '--shadow-card',        value: '0 1px 2px rgb(from var(--gray-900) r g b / 0.12)',     note: 'Тень карточек: auth-блок, info-блок.' },
     { name: '--shadow-button',      value: '0 4px 14px rgb(from var(--gray-900) r g b / 0.06)',     note: 'Тень primary-кнопки.' },
     { name: '--shadow-aside',       value: '4px 0 16px 2px rgb(from var(--gray-900) r g b / 0.03)', note: 'Тень бокового сайдбара (≥992px).' },
+    { name: '--shadow-bar',         value: '0 -6px 12px rgb(from var(--gray-900) r g b / 0.06)',    note: 'Тень сверху нижнего sticky-бара действий (DsStickyBar / реал buttons-panel).' },
     { name: '--shadow-dropdown',    value: '0 4px 20px rgb(from var(--gray-900) r g b / 0.20)',     note: 'Тень дропдаунов и поповеров.' },
     { name: '--shadow-input-focus', value: '0 0 0 4px rgb(from var(--brand) r g b / 0.12)',          note: 'Фокусная "глоу"-обводка инпутов с brand-цветом.' },
     { name: '--shadow-input-focus-danger', value: '0 0 0 4px rgb(from var(--status-danger) r g b / 0.12)', note: 'Фокус-обводка инпутов с ошибкой (danger).' },
@@ -367,6 +369,7 @@ export const LINE_HEIGHTS = [
 export const NOTICE_EXTRA = [
     { name: '--notice-success-bg',   ref: 'rgb(from var(--green-600) r g b / 0.12)', note: 'Фон зелёного success-notice.' },
     { name: '--notice-success-text', ref: '--green-600', note: 'Текст зелёного success-notice.' },
+    { name: '--notice-success-border', ref: 'rgb(from var(--green-600) r g b / 0.30)', note: 'Рамка зелёного success-notice (DsNotice tone=success).' },
     { name: '--notice-info-bg',      ref: 'rgb(from var(--blue-300) r g b / 0.12)', note: 'Фон голубого info-notice.' },
     { name: '--notice-info-border',  ref: '--blue-300', note: 'Рамка голубого info-notice.' },
     { name: '--border-error',        ref: '--red-300', note: 'Бордер инпута/контрола с ошибкой.' },

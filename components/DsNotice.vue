@@ -32,7 +32,7 @@ import { computed } from 'vue';
 const props = defineProps({
     title: { type: String, default: '' },
     // Тон фона: plain (белый, default) | info (голубой) | peach (notice-палитра).
-    tone: { type: String, default: 'plain', validator: (v) => ['plain', 'info', 'peach'].includes(v) },
+    tone: { type: String, default: 'plain', validator: (v) => ['plain', 'info', 'peach', 'success'].includes(v) },
     dismissible: { type: Boolean, default: true },
     visible: { type: Boolean, default: true },
     // На мобайле (<md) свернуть текст до 2 строк и уменьшить медиа — как реальный баннер в кабинете.
@@ -57,6 +57,8 @@ function onClose() { emit('update:visible', false); emit('close'); }
 }
 .ds-notice--info  { background: var(--notice-info-bg);  border-color: var(--notice-info-border); }
 .ds-notice--peach { background: var(--notice-bg);       border-color: var(--notice-border); }
+.ds-notice--success { background: var(--notice-success-bg); border-color: var(--notice-success-border); box-shadow: none; }
+.ds-notice--success .ds-notice__title { color: var(--notice-success-text); }
 
 .ds-notice__media { flex: 0 0 auto; }
 .ds-notice__media :deep(img) { display: block; border-radius: var(--radius-sm); }

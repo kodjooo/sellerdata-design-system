@@ -1,27 +1,15 @@
 <template>
     <Head title="Склад — экран-эталон" />
-    <DsAppShell :items="nav" active="warehouse">
-        <template #logo><span class="brand">sellerdata</span></template>
-        <template #title>
-            <span class="topbar">
-                <strong class="t-title-m topbar__page">Склад</strong>
-            </span>
-        </template>
-        <template #actions>
-            <DsIconButton variant="ghost" icon="fm-help-circle" aria-label="Помощь" />
-            <DsNotificationMenu :count="332" />
-            <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
-        </template>
-
+    <ScreenShell active="warehouse" title="Склад">
         <div class="screen">
-            <!-- Онбординг-баннер (реал: подсказка про отслеживание запасов по темпам продаж) -->
-            <DsNotice v-model:visible="hintOpen" tone="plain" collapse-mobile>
-                <template #media><span class="hint-thumb" aria-hidden="true"></span></template>
-                Здесь, исходя из темпов продаж за последние 30 дней, вы можете отслеживать свои
-                запасы и получать рекомендации о необходимости пополнить товар. Себестоимость FBO и FBS
-                синхронизируется автоматически. Введите длительность одной поставки и срок выполнения
-                заказа в днях, чтобы система рассчитала рекомендуемое количество для дозаказа.
-            </DsNotice>
+            <!-- Онбординг-баннер с видео (реал: кликабельное превью → fullscreen видео-попап «← Склад»).
+                 Эталон: docs/reference/screens/_live__склад__мобайл-видео-попап.png -->
+            <DsVideoBanner
+                v-if="hintOpen"
+                section="Склад"
+                :text="hintText"
+                @dismiss="hintOpen = false"
+            />
 
             <!-- Верхний тулбар: поиск товаров + выбор складов + FBO/FBS + фильтр -->
             <div class="bar">
@@ -30,13 +18,13 @@
                         <DsProductCell :name="option.label" :sub="option.sub" />
                     </template>
                 </DsSelect>
-                <DsSelect v-model="warehouse" :options="warehouses" placeholder="Все склады" class="bar__select" />
+                <DsSelect v-model="warehouse" :options="warehouses" placeholder="Все склады" multiple show-select-all class="bar__select" />
                 <DsSelect v-model="stockType" :options="stockTypes" placeholder="FBO/FBS" :show-footer="false" class="bar__select" />
                 <DsButton variant="secondary"><template #iconLeft>⚲</template>Фильтр</DsButton>
             </div>
 
             <!-- Сводка: 3 градиентные карточки (десктоп — ряд; мобайл — табы + свайпер + воронка) -->
-            <DsSummaryCarousel :items="summary" :card-columns="2">
+            <DsSummaryCarousel :items="summary" :card-columns="3">
                 <template #tabs-action>
                     <DsIconButton icon="fm-filter" aria-label="Фильтр" @click="filterOpen = true" />
                 </template>
@@ -45,10 +33,11 @@
             <!-- Таблица остатков FBO/FBS — «Группировать по» входит в карточку (часть таблицы) -->
             <DsCard radius="md" padding="--size-2" bleed-mobile>
                 <div class="tbar">
-                    <DsSelect v-model="group" :options="groups" placeholder="Группировать по" :show-footer="false" class="tbar__group" />
+                    <DsGroupBy v-model="group" :options="groups" />
                 </div>
                 <DsTable
                     :columns="cols" :rows="rows" row-key="id" expandable default-sort-key="quantity"
+                    numeric-align="left"
                     mobile-mode="compact"
                     :mobile-columns="['name', 'quantity', 'quantityDays']"
                     detail-title="Товар"
@@ -83,6 +72,14 @@
                         <span v-if="row.intermediate === ''">—</span>
                         <span v-else>{{ row.intermediate }}</span>
                     </template>
+                    <template #cell-purchase="{ row }">
+                        <span v-if="row.purchase === ''">—</span>
+                        <span v-else>{{ row.purchase }}</span>
+                    </template>
+                    <template #cell-orderDays="{ row }">
+                        <span v-if="row.orderDays === ''">—</span>
+                        <span v-else>{{ row.orderDays }}</span>
+                    </template>
 
                     <!-- Деталь-модалка (мобайл compact): шапка с товаром -->
                     <template #detail-header="{ row }">
@@ -93,14 +90,12 @@
                         <DsButton variant="primary" disabled>Сохранить</DsButton>
                     </template>
                 </DsTable>
+                <div class="tfoot">
+                    <DsPagination :page="page" :total="1000" :per-page="50" @change="p => page = p" />
+                </div>
             </DsCard>
 
-            <div class="tfoot">
-                <DsPagination :page="page" :total="1000" :per-page="50" @change="p => page = p" />
-            </div>
-
             <!-- Подвал поддержки -->
-            <DsSupportFooter />
 
             <!-- Мобильный фильтр: full-screen лист (реал _live__склад__мобайл-фильтр) -->
             <DsFilterSheet
@@ -110,46 +105,37 @@
                 @apply="filterOpen = false"
             />
         </div>
-    </DsAppShell>
+    </ScreenShell>
 </template>
 
 <script setup>
 import { ref } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import DsAppShell from '@/Components/Ds/DsAppShell.vue';
+import ScreenShell from './ScreenShell.vue';
 import DsSummaryCarousel from '@/Components/Ds/DsSummaryCarousel.vue';
 import DsCard from '@/Components/Ds/DsCard.vue';
 import DsButton from '@/Components/Ds/DsButton.vue';
 import DsIconButton from '@/Components/Ds/DsIconButton.vue';
-import DsSupportFooter from '@/Components/Ds/DsSupportFooter.vue';
 import DsSelect from '@/Components/Ds/DsSelect.vue';
+import DsGroupBy from '@/Components/Ds/DsGroupBy.vue';
 import DsTable from '@/Components/Ds/DsTable.vue';
 import DsTag from '@/Components/Ds/DsTag.vue';
 import DsPagination from '@/Components/Ds/DsPagination.vue';
 import DsProductCell from '@/Components/Ds/DsProductCell.vue';
-import DsNotice from '@/Components/Ds/DsNotice.vue';
-import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
-import DsNotificationMenu from '@/Components/Ds/DsNotificationMenu.vue';
+import DsVideoBanner from '@/Components/Ds/DsVideoBanner.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
 
-// Иконки сверены с реальным сайдбаром (Authenticated.vue) — как в Screens/Dashboard.vue.
-const nav = [
-    { key: 'dashboard', label: 'Дэшборд', icon: 'fm-layout', href: route('designSystem.screenDashboard') },
-    { key: 'products', label: 'Товары', icon: 'fm-clipboard', href: route('designSystem.screenProducts') },
-    { key: 'expenses', label: 'Расходы', icon: 'fm-credit-card', href: route('designSystem.screenExpenses') },
-    { key: 'redeems', label: 'Самовыкупы', icon: 'fm-rotate-ccw', href: route('designSystem.screenRedeems') },
-    { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: route('designSystem.screenAdvertising') },
-    { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: route('designSystem.screenWarehouse') },
-    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') , submenu: [{ label: 'Общие', href: route('designSystem.screenSettings') }, { label: 'Оплата', href: route('designSystem.screenSettingsBilling') }, { label: 'Пригласи друга', href: route('designSystem.screenSettingsReferral') }] },
-];
-
 const hintOpen = ref(true);
+const hintText = 'Здесь, исходя из темпов продаж за последние 30 дней, вы можете отслеживать свои '
+    + 'запасы и получать рекомендации о необходимости пополнить товар. Себестоимость FBO и FBS '
+    + 'синхронизируется автоматически. Введите длительность одной поставки и срок выполнения '
+    + 'заказа в днях, чтобы система рассчитала рекомендуемое количество для дозаказа.';
 const search = ref([]);
-const warehouse = ref(null);
+const warehouse = ref([]);
 const warehouses = ['Коледино', 'Электросталь', 'Казань', 'Тула'];
 const stockType = ref(null);
 const stockTypes = ['FBO/FBS', 'FBO', 'FBS'];
-const group = ref(null);
+const group = ref('Не группировать');
 const groups = ['Не группировать', 'Артикулу'];
 const page = ref(1);
 
@@ -246,16 +232,8 @@ function nextOrderDaysTone(row) {
 </script>
 
 <style scoped>
-/* ── Каркас: лого / топбар / аккаунт (как в Screens/Dashboard.vue) ── */
-.brand { font-size: var(--font-size-body-s); font-weight: var(--font-weight-bold); color: var(--brand); }
-.topbar { display: inline-flex; align-items: center; gap: var(--size-24); }
-.topbar__page { color: var(--text-heading); }
-.topbar__ico { color: var(--text-muted); font-size: var(--font-size-heading-m); cursor: pointer; }
-
 /* Без своего паддинга — отступ страницы задаёт AppShell content. */
 .screen { display: flex; flex-direction: column; gap: var(--size-16); }
-
-.hint-thumb { display: block; width: 96px; height: 56px; border-radius: var(--radius-sm); background: var(--brand-gradient); }
 
 /* Верхний тулбар */
 .bar { display: flex; align-items: center; gap: var(--size-16); flex-wrap: wrap; }
@@ -273,9 +251,8 @@ function nextOrderDaysTone(row) {
 
 /* Тулбар таблицы внутри карточки — «Группировать по» прижато вправо, разделитель снизу (реал) */
 .tbar { display: flex; align-items: center; justify-content: flex-end; gap: var(--size-16); flex-wrap: wrap; padding: var(--size-8) var(--size-12); border-bottom: 1px solid var(--border-default); }
-.tbar__group { width: 220px; max-width: 100%; }
 
-.tfoot { display: flex; justify-content: center; }
+.tfoot { display: flex; justify-content: center; padding: var(--size-16) var(--size-12); border-top: 1px solid var(--border-default); }
 .support { text-align: center; color: var(--text-muted); }
 .support__link { color: var(--brand); text-decoration: none; }
 .support__link:hover { text-decoration: underline; }

@@ -17,23 +17,29 @@ defineProps({
 </script>
 
 <style lang="scss" scoped>
+@use 'responsive' as *;
+
+/* Закреплённый снизу бар действий (реал buttons-panel): ВСЕГДА зафиксирован у нижнего
+   края экрана (position: fixed) — и на десктопе, и на мобайле. Белый фон, тень сверху,
+   кнопки слева. Во всю ширину; на ≥lg слева отступ под постоянный rail (100px). */
 .ds-sticky-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: var(--z-sticky, 10);
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: var(--size-12);
     flex-wrap: wrap;
-}
+    padding: var(--size-12) var(--size-24);
+    background: var(--surface-default);
+    box-shadow: var(--shadow-bar);
 
-@media (max-width: 767.98px) {
-    .ds-sticky-bar--mobile-sticky {
-        position: sticky;
-        bottom: 0;
-        z-index: var(--z-sticky, 10);
-        padding: var(--size-12) var(--size-16);
-        background: var(--surface-default);
-        border-top: 1px solid var(--border-default);
-        box-shadow: var(--shadow-card);
+    /* ≥lg: бар начинается после постоянного rail (100px = --size-96 + --size-4). */
+    @include respond-to(lg) {
+        left: calc(var(--size-96) + var(--size-4));
     }
 }
 </style>

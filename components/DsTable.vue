@@ -71,6 +71,12 @@ const props = defineProps({
         type: String,
         default: 'children',
     },
+    // Ключ колонки, в которой размещается триггер раскрытия (стрелка-аккордеон).
+    // По умолчанию — первая колонка. Напр. в Товарах стрелка идёт в колонке товара, а не в чекбоксе.
+    expandColumn: {
+        type: String,
+        default: '',
+    },
     // Hover-подсветка строк.
     hover: {
         type: Boolean,
@@ -129,6 +135,13 @@ const props = defineProps({
     autoSort: {
         type: Boolean,
         default: true,
+    },
+    // Выравнивание числовых колонок по умолчанию: 'right' (канон) | 'left' (реал-таблицы ЛК,
+    // где значения прижаты влево). Перебивается явным column.align.
+    numericAlign: {
+        type: String,
+        default: 'right',
+        validator: (v) => ['left', 'right', 'center'].includes(v),
     },
 });
 
@@ -223,10 +236,17 @@ const flatRows = computed(() => {
 // Кол-во колонок (для colspan пустого состояния; +1 на служебную деталь-колонку).
 const colCount = computed(() => props.columns.length + (showAutoDetail.value ? 1 : 0));
 
+// Является ли колонка «лид»-колонкой (несёт триггер раскрытия). По умолчанию — первая;
+// при заданном expandColumn — колонка с этим ключом.
+function isLeadColumn(column, colIndex) {
+    if (!props.expandable) return false;
+    return props.expandColumn ? column.key === props.expandColumn : colIndex === 0;
+}
+
 // Выравнивание ячейки: numeric → right, иначе column.align или left.
 function alignOf(column) {
     if (column.align) return column.align;
-    return column.numeric ? 'right' : 'left';
+    return column.numeric ? props.numericAlign : 'left';
 }
 
 /* ─── Режимы мобайла ────────────────────────────────────────────── */
@@ -272,10 +292,18 @@ function isMobileHidden(column) {
 
 // Деталь-модалка: список полей. Если есть слот #detail-header (шапка товара
 // с лид-колонкой), исключаем первую колонку из списка, чтобы не дублировать.
+// Служебные колонки без заголовка (чекбокс выбора, кнопки действий) в деталь
+// не выводим — иначе появляются пустые строки «без подписи / без значения».
 const slots = useSlots();
-const detailColumns = computed(() =>
-    slots['detail-header'] && props.columns.length ? props.columns.slice(1) : props.columns
-);
+const detailColumns = computed(() => {
+    const base = slots['detail-header'] && props.columns.length
+        ? props.columns.slice(1)
+        : props.columns;
+    return base.filter((column) => {
+        const label = typeof column.label === 'string' ? column.label.trim() : column.label;
+        return label !== '' && label != null;
+    });
+});
 const detailOpen = ref(false);
 const detailRow = ref(null);
 function openDetail(row) {
@@ -380,8 +408,8 @@ defineExpose({ openDetail });
                             ]"
                             :data-title="column.label"
                         >
-                            <!-- Триггер раскрытия в первой колонке (отступ по глубине) -->
-                            <span v-if="colIndex === 0 && expandable" class="ds-table__lead" :style="r.depth ? { paddingLeft: `calc(var(--size-16) * ${r.depth})` } : null">
+                            <!-- Триггер раскрытия в лид-колонке (отступ по глубине) -->
+                            <span v-if="isLeadColumn(column, colIndex)" class="ds-table__lead" :style="r.depth ? { paddingLeft: `calc(var(--size-16) * ${r.depth})` } : null">
                                 <button
                                     v-if="r.hasChildren"
                                     type="button"
@@ -489,16 +517,17 @@ defineExpose({ openDetail });
 /* ─── Таблица ─────────────────────────────────────────────────── */
 .ds-table {
     width: 100%;
+    margin: 0;                 /* гасим глобальное table{margin-bottom} (legacy-CSS) — лишний отступ под таблицей */
     border-collapse: collapse;
     background: var(--surface-default);
     color: var(--text-default);
 }
 
-/* Ячейки: вертикальный паддинг просторнее (реал-строки ~79px с миниатюрой 40px),
-   горизонтальный — плотный (~8px). Шапка переопределяет вертикаль на --size-8 ниже. */
+/* Ячейки: плотный ЛК — реал td padding ≈5px (берём --size-6, ближайший в шкале);
+   строка ~64px за счёт миниатюры 40px + текста в 2–3 строки. */
 .ds-table__th,
 .ds-table__td {
-    padding: var(--size-16) var(--size-8);
+    padding: var(--size-6) var(--size-6);
     border-bottom: 1px solid var(--border-default);
     border-right: 1px solid var(--border-default);   /* вертикальные разделители колонок (реал) */
     line-height: var(--line-height-tight);
@@ -506,12 +535,17 @@ defineExpose({ openDetail });
 /* последняя ячейка ряда — без правой границы (край таблицы) */
 .ds-table__th:last-child,
 .ds-table__td:last-child { border-right: 0; }
+/* Перед служебной деталь-колонкой (она скрыта на десктопе) — тоже без правой границы,
+   иначе у правого края видна «двойная линия» (бордер колонки + край карточки). */
+.ds-table__th:has(+ .ds-table__th--detail),
+.ds-table__td:has(+ .ds-table__td--detail) { border-right: 0; }
 
-/* ─── Заголовки: переносятся, мутеный 13/400, выравнивание сверху ─ */
+/* ─── Заголовки: переносятся, мутеный 13/400, выравнивание по центру ─ */
 .ds-table__th {
-    /* Шапка чуть выше по вертикали, чем тело. */
-    padding-top: var(--size-8);
-    padding-bottom: var(--size-8);
+    /* Шапка выше тела: высота ≥48 (реал ≈50), текст по вертикали по центру. */
+    height: var(--size-48);
+    padding-top: var(--size-6);
+    padding-bottom: var(--size-6);
     background: var(--surface-default);
     color: var(--text-default);          /* real th: #555 = --text-default (не muted) */
     font-size: var(--font-size-body-s);
@@ -519,7 +553,7 @@ defineExpose({ openDetail });
     text-align: left;
     /* Многоколоночные таблицы: заголовки ПЕРЕНОСИМ в 2–3 строки. */
     white-space: normal;
-    vertical-align: top;
+    vertical-align: middle;
 }
 .ds-table__th--center { text-align: center; }
 .ds-table__th--right { text-align: right; }
@@ -586,7 +620,7 @@ defineExpose({ openDetail });
 /* ─── Лид-ячейка с триггером раскрытия ────────────────────────── */
 .ds-table__lead {
     display: inline-flex;
-    align-items: flex-start;
+    align-items: center;          /* стрелка-аккордеон по центру ячейки (реал), а не по верху */
     gap: var(--size-8);
     min-width: 0;
 }

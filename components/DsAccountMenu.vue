@@ -21,8 +21,8 @@
                     :class="{ 'is-active': s.id === activeId }"
                     @click="$emit('select', s); close();"
                 >
-                    <span class="t-body-s ds-acc-menu__store">{{ s.name }}</span>
                     <img v-if="marketIcon(s.dataSource)" class="ds-acc-menu__ico" :src="marketIcon(s.dataSource)" alt="" aria-hidden="true" />
+                    <span class="t-body-s ds-acc-menu__store">{{ s.name }}</span>
                 </button>
 
                 <span class="ds-acc-menu__sep" aria-hidden="true"></span>
@@ -67,9 +67,10 @@ function marketIcon(ds) {
 .ds-acc-menu__trigger { display: inline-flex; align-items: center; gap: var(--size-4); }
 .ds-acc-menu__chev { color: var(--text-muted); font-size: var(--font-size-body-s); }
 
-.ds-acc-menu__list { display: flex; flex-direction: column; min-width: calc(var(--size-128) * 2.5); }
+/* Ширина дропдауна — компактная, как реал (w-48 ≈192; берём ~224 c запасом под длинные имена). */
+.ds-acc-menu__list { display: flex; flex-direction: column; min-width: calc(var(--size-128) * 1.75); }
 .ds-acc-menu__row {
-    display: flex; align-items: center; justify-content: space-between; gap: var(--size-8);
+    display: flex; align-items: center; gap: var(--size-8);
     width: 100%; padding: var(--size-12) var(--size-16); border: 0; border-radius: var(--radius-sm);
     background: transparent; color: var(--text-default); text-align: left; cursor: pointer;
 }

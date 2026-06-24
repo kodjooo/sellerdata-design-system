@@ -1,18 +1,6 @@
 <template>
     <Head title="Расходы — экран-эталон" />
-    <DsAppShell :items="nav" active="expenses">
-        <template #logo><span class="brand">sellerdata</span></template>
-        <template #title>
-            <span class="topbar">
-                <strong class="t-title-m topbar__page">Расходы</strong>
-            </span>
-        </template>
-        <template #actions>
-            <DsIconButton variant="ghost" icon="fm-help-circle" aria-label="Помощь" />
-            <DsNotificationMenu :count="332" />
-            <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
-        </template>
-
+    <ScreenShell active="expenses" title="Расходы">
         <div class="screen">
             <!-- Онбординг-баннер раздела (реал: BreezeDashboardInfo — текст про косвенные расходы) -->
             <DsNotice v-model:visible="hintOpen" tone="plain" collapse-mobile>
@@ -31,6 +19,7 @@
                 <DsInput
                     v-model="query"
                     placeholder="Наименование расхода"
+                    suffix-icon="fm-search"
                     class="bar__search bar__desktop-only"
                 />
                 <DsSelect
@@ -66,15 +55,16 @@
                         <DsCheckbox v-if="!row.isSummary" v-model="selected" :value="row.id" />
                     </template>
 
-                    <!-- Дата / для строки-итога — подпись «Всего в …» -->
+                    <!-- Дата; для строки-итога — подпись «Всего в …»: на десктопе справа (колонка Товар),
+                         на мобайле колонка Товар скрыта → дублируем подпись здесь (видна только <md). -->
                     <template #cell-date="{ row }">
-                        <span v-if="row.isSummary" class="summary-label">{{ row.summaryLabel }}</span>
-                        <span v-else>{{ row.date }}</span>
+                        <span v-if="!row.isSummary">{{ row.date }}</span>
+                        <span v-else class="summary-label summary-label--mobile">{{ row.summaryLabel }}</span>
                     </template>
 
-                    <!-- Товары: список кликабельных артикулов (реал — ссылки nm_id через запятую) -->
+                    <!-- Товары: список артикулов; для строки-итога — подпись «Всего в …» справа (реал) -->
                     <template #cell-products="{ row }">
-                        <span v-if="row.isSummary"></span>
+                        <span v-if="row.isSummary" class="summary-label">{{ row.summaryLabel }}</span>
                         <span v-else-if="!row.products || !row.products.length" class="muted">--</span>
                         <span v-else class="products">
                             <template v-for="(p, i) in row.products" :key="p">
@@ -127,27 +117,26 @@
                     </template>
                 </DsTable>
             </DsCard>
+        </div>
 
-            <!-- Подвал поддержки -->
-            <DsSupportFooter />
-
-            <!-- Нижняя панель действий (реал: buttons-panel — «Добавить»; при выборе строк — «Удалить») -->
+        <!-- Нижний закреплённый бар действий (реал buttons-panel) — в самом низу, после футера -->
+        <template #bottombar>
             <DsStickyBar class="actions">
                 <DsButton v-if="selected.length" variant="primary" @click="deleteOpen = true">Удалить</DsButton>
                 <DsButton v-else variant="primary" @click="openCreate">Добавить</DsButton>
             </DsStickyBar>
-        </div>
+        </template>
 
         <!-- ─── Модалка создания/редактирования расхода ─── -->
-        <DsModal v-model="formOpen" :title="isCreating ? 'Добавить расход' : 'Изменить расход'" size="md">
+        <DsModal v-model="formOpen" :title="isCreating ? 'Добавить расход' : 'Изменить расход'" size="sm">
             <div class="form">
-                <!-- Наименование + Сумма в одну строку (реал — info-list__row) -->
+                <!-- Наименование + Сумма в одну строку (реал — info-list__row, безрамочные inline-поля) -->
                 <div class="form__row">
-                    <DsInput v-model="form.title" label="Наименование" placeholder="Название расхода" />
-                    <DsInput v-model="form.amount" label="Сумма" placeholder="0" />
+                    <DsInput v-model="form.title" label="Наименование" placeholder="Название расхода" inline />
+                    <DsInput v-model="form.amount" label="Сумма" placeholder="0" inline />
                 </div>
 
-                <DsInput v-model="form.date" label="Дата" placeholder="дд.мм.гггг" />
+                <DsInput v-model="form.date" label="Дата" placeholder="дд.мм.гггг" inline />
 
                 <DsSelect
                     v-model="form.type"
@@ -186,7 +175,7 @@
 
             <template #footer>
                 <DsButton v-if="!isCreating" variant="secondary" @click="deleteOpen = true">Удалить</DsButton>
-                <DsButton variant="primary" :disabled="!formPopulated" @click="formOpen = false">Сохранить</DsButton>
+                <DsButton variant="primary" :class="{ 'exp-save': isCreating }" :disabled="!formPopulated" @click="formOpen = false">Сохранить</DsButton>
             </template>
         </DsModal>
 
@@ -226,38 +215,24 @@
             @reset="filterOpen = false"
             @apply="filterOpen = false"
         />
-    </DsAppShell>
+    </ScreenShell>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import DsAppShell from '@/Components/Ds/DsAppShell.vue';
+import ScreenShell from './ScreenShell.vue';
 import DsCard from '@/Components/Ds/DsCard.vue';
 import DsButton from '@/Components/Ds/DsButton.vue';
 import DsIconButton from '@/Components/Ds/DsIconButton.vue';
-import DsSupportFooter from '@/Components/Ds/DsSupportFooter.vue';
 import DsInput from '@/Components/Ds/DsInput.vue';
 import DsSelect from '@/Components/Ds/DsSelect.vue';
 import DsCheckbox from '@/Components/Ds/DsCheckbox.vue';
 import DsTable from '@/Components/Ds/DsTable.vue';
 import DsModal from '@/Components/Ds/DsModal.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
-import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
-import DsNotificationMenu from '@/Components/Ds/DsNotificationMenu.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
 import DsStickyBar from '@/Components/Ds/DsStickyBar.vue';
-
-// Иконки сверены с реальным сайдбаром (Authenticated.vue) — как в Screens/Products.vue/Warehouse.vue.
-const nav = [
-    { key: 'dashboard', label: 'Дэшборд', icon: 'fm-layout', href: route('designSystem.screenDashboard') },
-    { key: 'products', label: 'Товары', icon: 'fm-clipboard', href: route('designSystem.screenProducts') },
-    { key: 'expenses', label: 'Расходы', icon: 'fm-credit-card', href: route('designSystem.screenExpenses') },
-    { key: 'redeems', label: 'Самовыкупы', icon: 'fm-rotate-ccw', href: route('designSystem.screenRedeems') },
-    { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: route('designSystem.screenAdvertising') },
-    { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: route('designSystem.screenWarehouse') },
-    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') , submenu: [{ label: 'Общие', href: route('designSystem.screenSettings') }, { label: 'Оплата', href: route('designSystem.screenSettingsBilling') }, { label: 'Пригласи друга', href: route('designSystem.screenSettingsReferral') }] },
-];
 
 const hintOpen = ref(true);
 const query = ref('');
@@ -330,12 +305,6 @@ const rows = [
 </script>
 
 <style scoped>
-/* ── Каркас: лого / топбар / аккаунт (как в Screens/Products.vue) ── */
-.brand { font-size: var(--font-size-body-s); font-weight: var(--font-weight-bold); color: var(--brand); }
-.topbar { display: inline-flex; align-items: center; gap: var(--size-24); }
-.topbar__page { color: var(--text-heading); }
-.topbar__ico { color: var(--text-muted); font-size: var(--font-size-heading-m); cursor: pointer; }
-
 /* Без своего паддинга — отступ страницы задаёт AppShell content. */
 .screen { display: flex; flex-direction: column; gap: var(--size-16); }
 
@@ -376,7 +345,11 @@ const rows = [
 .products__link:hover { text-decoration: underline; }
 
 /* Строка-итог месяца «Всего в …»: вес 600 + muted #555 (реал total_table_row — не тёмный heading) */
-.summary-label { display: block; white-space: nowrap; font-weight: var(--font-weight-semibold); color: var(--text-default); }
+/* Подпись итога «Всего в …» — справа в колонке Товар, вплотную к Сумме (реал). */
+.summary-label { display: block; width: 100%; text-align: right; white-space: nowrap; font-weight: var(--font-weight-semibold); color: var(--text-default); }
+/* Дубликат подписи итога в колонке «Дата» — только на мобайле (колонка Товар скрыта). */
+.summary-label--mobile { display: none; text-align: left; }
+@media (max-width: 767.98px) { .summary-label--mobile { display: block; } }
 .summary-total { font-weight: var(--font-weight-semibold); color: var(--text-default); }
 
 .action-btn { border: 0; background: transparent; color: var(--text-muted); font-size: var(--font-size-title-m); line-height: 1; cursor: pointer; }
@@ -431,4 +404,7 @@ const rows = [
 .period__apply { width: 100%; }
 
 .del-text { color: var(--text-default); text-align: center; }
+
+/* «Сохранить» во всю ширину в режиме создания (реал — кнопка на всю ширину футера). */
+.exp-save { width: 100%; }
 </style>

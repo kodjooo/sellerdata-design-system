@@ -1,18 +1,6 @@
 <template>
     <Head title="Самовыкупы — экран-эталон" />
-    <DsAppShell :items="nav" active="redeems">
-        <template #logo><span class="brand">sellerdata</span></template>
-        <template #title>
-            <span class="topbar">
-                <strong class="t-title-m topbar__page">Самовыкупы</strong>
-            </span>
-        </template>
-        <template #actions>
-            <DsIconButton variant="ghost" icon="fm-help-circle" aria-label="Помощь" />
-            <DsNotificationMenu :count="332" />
-            <DsAccountMenu name="Демо аккаунт" active-id="wb" :stores="[{id:&apos;wb&apos;,name:&apos;Основной Магазин&apos;,dataSource:&apos;wildberries&apos;},{id:&apos;ozon&apos;,name:&apos;Дополнительный магазин&apos;,dataSource:&apos;ozon&apos;}]" />
-        </template>
-
+    <ScreenShell active="redeems" title="Самовыкупы">
         <div class="screen">
             <!-- Онбординг-баннер раздела (реал: BreezeDashboardInfo — текст про самовыкупы) -->
             <DsNotice v-model:visible="hintOpen" tone="plain" collapse-mobile>
@@ -31,6 +19,7 @@
                 <DsInput
                     v-model="query"
                     placeholder="Поиск по номеру заказа"
+                    suffix-icon="fm-search"
                     class="bar__search bar__desktop-only"
                 />
                 <DsIconButton icon="fm-calendar" size="lg" aria-label="Период" class="bar__period bar__desktop-only" @click="periodOpen = true" />
@@ -151,20 +140,19 @@
                     </template>
                 </DsTable>
             </DsCard>
+        </div>
 
-            <!-- Подвал поддержки -->
-            <DsSupportFooter />
-
-            <!-- Нижняя панель действий (реал: buttons-panel — «Добавить»; при выборе строк — «Удалить») -->
+        <!-- Нижний закреплённый бар действий (реал buttons-panel) -->
+        <template #bottombar>
             <DsStickyBar class="actions">
                 <DsButton v-if="selected.length" variant="primary" @click="deleteOpen = true">Удалить</DsButton>
                 <DsButton v-else variant="primary" @click="openCreate">Добавить</DsButton>
             </DsStickyBar>
-        </div>
+        </template>
 
         <!-- ─── Модалка редактирования самовыкупа (реал: redeemCreate, режим «Изменить») ───
              Шапка с заказом → блок read-only показателей (DsInfoList) → редактируемые поля. -->
-        <DsModal v-model="editOpen" title="Изменить Самовыкуп" size="md">
+        <DsModal v-model="editOpen" title="Изменить Самовыкуп" size="sm">
             <div class="form">
                 <!-- Заказ: номер с копированием + дата/сумма (реал item__product-id) -->
                 <div class="form__order">
@@ -180,8 +168,8 @@
                 <DsInfoList flat :items="editInfo" />
 
                 <!-- Редактируемые поля -->
-                <DsInput v-model="editing.fee" label="Стоимость услуги" placeholder="0" />
-                <DsInput v-model="editing.redeemer" label="Выкупщик" placeholder="ООО «Выкупщик WB»" />
+                <DsInput v-model="editing.fee" label="Стоимость услуги" placeholder="0" inline />
+                <DsInput v-model="editing.redeemer" label="Выкупщик" placeholder="ООО «Выкупщик WB»" inline />
                 <DsCheckbox v-model="editing.notReturned" label="Товар не вернулся" />
                 <DsCheckbox v-model="editing.feedback" label="Отзыв получен" />
             </div>
@@ -194,7 +182,7 @@
 
         <!-- ─── Модалка создания самовыкупа (реал: redeemAdd) ───
              Поиск заказов + чекбоксы выбора. Здесь — компактный мок мультивыбора заказов. -->
-        <DsModal v-model="createOpen" title="Добавить Самовыкуп" size="md">
+        <DsModal v-model="createOpen" title="Добавить Самовыкуп" size="sm">
             <div class="create">
                 <DsInput v-model="createSearch" placeholder="Номер заказа, артикул или баркод" />
                 <div class="create__list">
@@ -211,7 +199,7 @@
                 </div>
             </div>
             <template #footer>
-                <DsButton variant="primary" :disabled="!createSelected.length" @click="createOpen = false">Сохранить</DsButton>
+                <DsButton variant="primary" class="cta-full" :disabled="!createSelected.length" @click="createOpen = false">Сохранить</DsButton>
             </template>
         </DsModal>
 
@@ -251,17 +239,16 @@
             @reset="filterOpen = false"
             @apply="filterOpen = false"
         />
-    </DsAppShell>
+    </ScreenShell>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
 import { Head } from '@inertiajs/vue3';
-import DsAppShell from '@/Components/Ds/DsAppShell.vue';
+import ScreenShell from './ScreenShell.vue';
 import DsCard from '@/Components/Ds/DsCard.vue';
 import DsButton from '@/Components/Ds/DsButton.vue';
 import DsIconButton from '@/Components/Ds/DsIconButton.vue';
-import DsSupportFooter from '@/Components/Ds/DsSupportFooter.vue';
 import DsInput from '@/Components/Ds/DsInput.vue';
 import DsCheckbox from '@/Components/Ds/DsCheckbox.vue';
 import DsTable from '@/Components/Ds/DsTable.vue';
@@ -269,21 +256,8 @@ import DsModal from '@/Components/Ds/DsModal.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
 import DsInfoList from '@/Components/Ds/DsInfoList.vue';
 import DsCopyButton from '@/Components/Ds/DsCopyButton.vue';
-import DsAccountMenu from '@/Components/Ds/DsAccountMenu.vue';
-import DsNotificationMenu from '@/Components/Ds/DsNotificationMenu.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
 import DsStickyBar from '@/Components/Ds/DsStickyBar.vue';
-
-// Иконки сверены с реальным сайдбаром (Authenticated.vue) — как в Screens/Expenses.vue/Products.vue.
-const nav = [
-    { key: 'dashboard', label: 'Дэшборд', icon: 'fm-layout', href: route('designSystem.screenDashboard') },
-    { key: 'products', label: 'Товары', icon: 'fm-clipboard', href: route('designSystem.screenProducts') },
-    { key: 'expenses', label: 'Расходы', icon: 'fm-credit-card', href: route('designSystem.screenExpenses') },
-    { key: 'redeems', label: 'Самовыкупы', icon: 'fm-rotate-ccw', href: route('designSystem.screenRedeems') },
-    { key: 'ads', label: 'Реклама', icon: 'fm-volume-2', href: route('designSystem.screenAdvertising') },
-    { key: 'warehouse', label: 'Склад', icon: 'fm-archive', href: route('designSystem.screenWarehouse') },
-    { key: 'settings', label: 'Настройки', icon: 'fm-settings', href: route('designSystem.screenSettings') , submenu: [{ label: 'Общие', href: route('designSystem.screenSettings') }, { label: 'Оплата', href: route('designSystem.screenSettingsBilling') }, { label: 'Пригласи друга', href: route('designSystem.screenSettingsReferral') }] },
-];
 
 const hintOpen = ref(true);
 const query = ref('');
@@ -368,12 +342,6 @@ const deleteOpen = ref(false);
 </script>
 
 <style scoped>
-/* ── Каркас: лого / топбар / аккаунт (как в Screens/Expenses.vue) ── */
-.brand { font-size: var(--font-size-body-s); font-weight: var(--font-weight-bold); color: var(--brand); }
-.topbar { display: inline-flex; align-items: center; gap: var(--size-24); }
-.topbar__page { color: var(--text-heading); }
-.topbar__ico { color: var(--text-muted); font-size: var(--font-size-heading-m); cursor: pointer; }
-
 /* Без своего паддинга — отступ страницы задаёт AppShell content. */
 .screen { display: flex; flex-direction: column; gap: var(--size-16); }
 
@@ -483,4 +451,7 @@ const deleteOpen = ref(false);
 .period__apply { width: 100%; }
 
 .del-text { color: var(--text-default); text-align: center; }
+
+/* CTA во всю ширину футера (модалка создания — одна кнопка «Сохранить»). */
+.cta-full { width: 100%; }
 </style>

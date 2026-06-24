@@ -1,7 +1,7 @@
 <template>
     <label class="ds-field">
         <span v-if="label" class="t-label-m ds-field__label">{{ label }}<span v-if="required" class="ds-field__req">*</span></span>
-        <span class="ds-field__control" :class="{ 'ds-field__control--suffixed': suffix }">
+        <span class="ds-field__control" :class="{ 'ds-field__control--suffixed': suffix || suffixIcon }">
             <input
                 class="ds-input"
                 :class="{ 'is-error': error, 'ds-input--inline': inline }"
@@ -13,6 +13,7 @@
                 @input="$emit('update:modelValue', $event.target.value)"
             />
             <span v-if="suffix" class="ds-input__suffix" aria-hidden="true">{{ suffix }}</span>
+            <span v-else-if="suffixIcon" class="ds-input__suffix" :class="suffixIcon" aria-hidden="true"></span>
         </span>
         <span v-if="error" class="t-body-s ds-field__error">{{ error }}</span>
         <span v-else-if="helper" class="t-body-s ds-field__helper">{{ helper }}</span>
@@ -42,12 +43,14 @@ defineProps({
     inline: { type: Boolean, default: false },
     // Суффикс в поле (₽/%) — реал inline-поля себестоимости/процентов.
     suffix: { type: String, default: '' },
+    // Иконка-суффикс (класс fm-*), напр. лупа в поле поиска (реал — поиск расходов/настроек).
+    suffixIcon: { type: String, default: '' },
 });
 defineEmits(['update:modelValue']);
 </script>
 
 <style lang="scss" scoped>
-.ds-field { display: flex; flex-direction: column; gap: var(--size-6); width: 100%; }
+.ds-field { display: flex; flex-direction: column; gap: var(--size-6); width: 100%; margin: 0; }
 .ds-field__label { color: var(--text-default); }
 .ds-field__req { color: var(--status-danger); margin-left: 2px; }
 .ds-field__control { display: block; position: relative; }
@@ -71,7 +74,7 @@ defineEmits(['update:modelValue']);
     color: var(--text-default);
     line-height: 1.2;
     display: block;
-    min-height: 42px;                        /* real: rem(42) — кандидат на унификацию к 40 */
+    min-height: var(--control-height-md);    /* 40 — единая высота контролов (= DsSelect), ровный тулбар */
     box-sizing: border-box;
     font-family: var(--font-family-sans);
     outline: none;
