@@ -347,8 +347,8 @@ const marketplaces = ['Wildberries', 'Ozon', 'Яндекс Маркет'];
 /* ── Карточки магазинов ── */
 .stores { display: flex; flex-direction: column; gap: var(--size-12); }
 .store {
-    /* Ряд без переноса: имя | пилюли (переносятся ВНУТРИ) | действия справа сверху (реал). */
-    display: flex; align-items: flex-start; gap: var(--size-16);
+    /* Ряд без переноса: имя | пилюли (переносятся ВНУТРИ) | действия; всё по центру по вертикали. */
+    display: flex; align-items: center; gap: var(--size-16);
     padding: var(--size-16) var(--size-24);
     border: 1px solid var(--border-default); border-radius: var(--radius-md);
     background: var(--surface-default);
