@@ -51,6 +51,7 @@
 | **DsSummaryCarousel** | `items` [{title,gradient,icon?,metrics}], `cardColumns` (колонок метрик в карточке, def 2), `featuredFirst` | ряд/карусель карточек-сводок (DsSummaryCard); слот `#tabs-action` (воронка на мобайле); на <md — горизонтальный скролл | `resources/js/Components/Ds/DsSummaryCarousel.vue` |
 | **DsVideoBanner** | `title`, `text`, `poster` | баннер-видеохинт (превью с play + текст), вверху раздела (Склад/Расходы) | `resources/js/Components/Ds/DsVideoBanner.vue` |
 | **DsGroupBy** | `modelValue` (v-model), `options` [строки], `label` (def «Группировать по») | «Группировать по <значение>»: подпись + brand-значение + поповер-меню (без рамки); Дэшборд/Склад | `resources/js/Components/Ds/DsGroupBy.vue` |
+| **DsOptionCard** | `selected`, `title`, `sub`, `icon`, `layout` row\|stack (def row), `activeStyle` fill\|border (def fill), `check`, `checkSide` right\|left; emit `select`; slot `icon` | карточка-вариант выбора (радио): пресеты периода, способ оплаты, действие с ключом; row/stack, заливка/рамка для выбранной, опц. галочка | `resources/js/Components/Ds/DsOptionCard.vue` |
 | **DsAppShell** | `items` (пункты rail [{key,label,icon,href,submenu?}]), `active`; слоты `logo`/`title`/`actions`/default | каркас ЛК: rail (постоянный ≥lg / off-canvas бургер <lg) + **sticky-топбар** (закреплён при скролле) + контент; инфраструктурный — демонстрируется всеми экранами `/screens/*` | `resources/js/Components/Ds/DsAppShell.vue` |
 
 ## Slots / Emits (для сборки страниц)

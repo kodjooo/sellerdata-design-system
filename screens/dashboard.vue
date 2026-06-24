@@ -117,27 +117,23 @@
             <!-- Модалка периода (таблица/плитки): пресет-список в 2 колонки + произвольный период -->
             <DsModal v-model="periodOpen" title="Период" size="md">
                 <div class="period-grid">
-                    <button
+                    <DsOptionCard
                         v-for="p in periodPresets"
                         :key="p.key"
-                        type="button"
-                        class="radio-item"
-                        :class="{ 'is-active': p.key === periodPreset }"
-                        @click="periodPreset = p.key"
-                    >
-                        <span class="radio-item__main">{{ p.label }}</span>
-                        <span v-if="p.key === periodPreset" class="radio-item__check fm-check" aria-hidden="true"></span>
-                    </button>
-                    <!-- Произвольный период — карточка во всю ширину (реал) -->
-                    <button
-                        type="button"
-                        class="radio-item radio-item--wide"
-                        :class="{ 'is-active': periodPreset === 'custom' }"
-                        @click="periodPreset = 'custom'"
-                    >
-                        <span class="radio-item__check-left fm-check" aria-hidden="true"></span>
-                        <span class="radio-item__main">Произвольный период</span>
-                    </button>
+                        :title="p.label"
+                        :selected="p.key === periodPreset"
+                        check
+                        @select="periodPreset = p.key"
+                    />
+                    <!-- Произвольный период — карточка во всю ширину, галочка слева (реал) -->
+                    <DsOptionCard
+                        class="period-grid__wide"
+                        title="Произвольный период"
+                        :selected="periodPreset === 'custom'"
+                        check
+                        check-side="left"
+                        @select="periodPreset = 'custom'"
+                    />
                 </div>
                 <div class="modal-cta">
                     <DsButton variant="primary" @click="periodOpen = false">Фильтровать</DsButton>
@@ -147,17 +143,14 @@
             <!-- Модалка фильтра диаграммы: радио-выбор гранулярности графика -->
             <DsModal v-model="chartFilterOpen" title="Период" size="sm">
                 <div class="radio-list">
-                    <button
+                    <DsOptionCard
                         v-for="o in chartGranOptions"
                         :key="o.key"
-                        type="button"
-                        class="radio-item"
-                        :class="{ 'is-active': o.key === chartGran }"
-                        @click="chartGran = o.key"
-                    >
-                        <span class="radio-item__main">{{ o.label }}</span>
-                        <span v-if="o.key === chartGran" class="radio-item__check fm-check" aria-hidden="true"></span>
-                    </button>
+                        :title="o.label"
+                        :selected="o.key === chartGran"
+                        check
+                        @select="chartGran = o.key"
+                    />
                 </div>
                 <div class="modal-cta">
                     <DsButton variant="primary" @click="chartFilterOpen = false">Фильтровать</DsButton>
@@ -178,6 +171,7 @@
 import { ref, computed, watch } from 'vue';
 import { Head } from '@inertiajs/vue3';
 import ScreenShell from './ScreenShell.vue';
+import DsOptionCard from '@/Components/Ds/DsOptionCard.vue';
 import DsSummaryCard from '@/Components/Ds/DsSummaryCard.vue';
 import DsSummaryCarousel from '@/Components/Ds/DsSummaryCarousel.vue';
 import DsTabs from '@/Components/Ds/DsTabs.vue';
@@ -483,32 +477,11 @@ const rows = computed(() => (group.value === 'Бренду' ? brandGroups : prod
 .tfoot { display: flex; justify-content: center; padding: var(--size-16) var(--size-12); border-top: 1px solid var(--border-default); }
 
 /* ── Модалки периода / фильтра диаграммы ── */
-/* Список пресетов периода: 2 колонки на десктопе, 1 на мобайле */
+/* Список пресетов периода (DsOptionCard): 2 колонки на десктопе, 1 на мобайле */
 .period-grid { display: grid; grid-template-columns: 1fr; gap: var(--size-8); }
 @media (min-width: 768px) { .period-grid { grid-template-columns: 1fr 1fr; } }
+.period-grid__wide { grid-column: 1 / -1; }   /* «Произвольный период» во всю ширину */
 .radio-list { display: flex; flex-direction: column; gap: var(--size-8); }
-
-/* Радио-пункт (кандидат на вынос в DsRadioGroup): рамка → активный = brand-фон + галочка */
-.radio-item {
-    position: relative; display: flex; flex-direction: column; gap: var(--size-2);
-    width: 100%; padding: var(--size-12) var(--size-16); padding-right: var(--size-32);
-    border: 1px solid var(--border-default); border-radius: var(--radius-sm);
-    background: var(--surface-default); color: var(--text-default);
-    text-align: left; cursor: pointer;
-    transition: border-color var(--transition-fast) var(--ease-standard),
-                background-color var(--transition-fast) var(--ease-standard);
-}
-.radio-item:hover { border-color: var(--brand); }
-.radio-item.is-active { background: var(--brand); border-color: var(--brand); color: var(--text-on-brand); }
-.radio-item__main { font-size: var(--font-size-body-s); white-space: normal; }
-/* «Произвольный период» — карточка во всю ширину, галочка слева (реал) */
-.radio-item--wide { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: var(--size-8); padding-right: var(--size-16); }
-.radio-item__check-left { flex: 0 0 auto; color: var(--text-placeholder); }
-.radio-item--wide.is-active .radio-item__check-left { color: var(--text-on-brand); }
-.radio-item__sub { font-size: var(--font-size-caption); opacity: var(--opacity-hover); }
-.radio-item__check { position: absolute; top: 50%; right: var(--size-12); transform: translateY(-50%); color: var(--text-on-brand); }
-
-.period-custom { margin-top: var(--size-12); border: 0; background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; }
 
 /* CTA модалок — кнопка во всю ширину (реал «Фильтровать») */
 .modal-cta { margin-top: var(--size-20); }

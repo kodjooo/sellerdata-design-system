@@ -78,17 +78,16 @@
 
             <!-- Способ оплаты: карта / счёт (реал pricing-payment-type) -->
             <div class="pay-type">
-                <button
+                <DsOptionCard
                     v-for="m in payMethods"
                     :key="m.key"
-                    type="button"
-                    class="pay-type__opt"
-                    :class="{ 'is-active': payMethod === m.key }"
-                    @click="payMethod = m.key"
-                >
-                    <span class="pay-type__ico" :class="m.icon" aria-hidden="true"></span>
-                    <span class="t-body-s pay-type__text">{{ m.label }}</span>
-                </button>
+                    layout="stack"
+                    active-style="border"
+                    :icon="m.icon"
+                    :title="m.label"
+                    :selected="payMethod === m.key"
+                    @select="payMethod = m.key"
+                />
             </div>
 
             <!-- Тип лица: физ/юр (radio) -->
@@ -128,6 +127,7 @@ import DsInfoList from '@/Components/Ds/DsInfoList.vue';
 import DsPricingCard from '@/Components/Ds/DsPricingCard.vue';
 import DsServiceCard from '@/Components/Ds/DsServiceCard.vue';
 import DsPriceToggle from '@/Components/Ds/DsPriceToggle.vue';
+import DsOptionCard from '@/Components/Ds/DsOptionCard.vue';
 
 // ── Переключатели срока и валюты (DsPriceToggle) ──
 const period = ref('yearly');
@@ -297,18 +297,8 @@ function openBuy(plan) {
 .buy-field { display: flex; flex-direction: column; gap: var(--size-6); margin-bottom: var(--size-16); }
 .buy-field__label { color: var(--text-default); }
 
+/* Способ оплаты (DsOptionCard stack + border): 2 колонки. */
 .pay-type { display: grid; grid-template-columns: 1fr 1fr; gap: var(--size-12); margin-bottom: var(--size-16); }
-.pay-type__opt {
-    display: flex; flex-direction: column; align-items: center; gap: var(--size-8);
-    padding: var(--size-16); border: 1px solid var(--border-default); border-radius: var(--radius-md);
-    background: var(--surface-default); cursor: pointer;
-    transition: border-color var(--transition-fast) var(--ease-standard);
-}
-.pay-type__opt:hover { border-color: var(--border-strong); }
-.pay-type__opt.is-active { border-color: var(--brand); }
-.pay-type__ico { font-size: var(--font-size-heading-m); color: var(--brand); }
-.pay-type__opt:not(.is-active) .pay-type__text { color: var(--text-heading); }
-.pay-type__opt.is-active .pay-type__text { color: var(--brand); }
 
 .jur { display: flex; gap: var(--size-24); margin-bottom: var(--size-16); }
 .jur-field { margin-bottom: var(--size-16); }

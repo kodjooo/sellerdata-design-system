@@ -83,6 +83,22 @@
                         <span v-else class="date t-body-s">{{ row.name }}</span>
                     </template>
 
+                    <!-- Просмотры: для товара — кликабельны, открывают расшифровку по фразам (реал-поповер) -->
+                    <template #cell-views="{ row, value }">
+                        <DsPopover v-if="row.kind === 'product' && value !== '0'" placement="bottom-start">
+                            <button type="button" class="views-link">{{ value }}</button>
+                            <template #content>
+                                <div class="views-pop">
+                                    <div v-for="kw in viewsBreakdown" :key="kw.phrase" class="views-pop__row">
+                                        <span class="views-pop__phrase">{{ kw.phrase }}</span>
+                                        <span class="views-pop__count">{{ kw.count }}</span>
+                                    </div>
+                                </div>
+                            </template>
+                        </DsPopover>
+                        <span v-else>{{ value }}</span>
+                    </template>
+
                     <template #cell-drrOrders="{ value }">
                         <span :class="dim(value)">{{ value }}</span>
                     </template>
@@ -122,6 +138,16 @@ import DsCopyButton from '@/Components/Ds/DsCopyButton.vue';
 import DsPagination from '@/Components/Ds/DsPagination.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
+import DsPopover from '@/Components/Ds/DsPopover.vue';
+
+// Расшифровка просмотров по фразам (реал: поповер при клике на число просмотров товара).
+const viewsBreakdown = [
+    { phrase: 'Подарок в садик детям на день рождения', count: '123' },
+    { phrase: 'Поделки', count: '10' },
+    { phrase: 'Аппликации', count: '21' },
+    { phrase: 'Набор для рукоделия', count: '211' },
+    { phrase: 'Поделки для девочек', count: '32' },
+];
 
 const hintOpen = ref(true);
 const tab = ref('products');
@@ -273,4 +299,13 @@ function dim(v) { return v === '-' ? 'muted' : null; }
 
 .muted { color: var(--text-muted); }
 .tfoot { display: flex; justify-content: center; padding: var(--size-16) var(--size-12); border-top: 1px solid var(--border-default); }
+
+/* Просмотры-ссылка + поповер расшифровки по фразам */
+.views-link { border: 0; background: transparent; color: var(--brand); font-size: var(--font-size-body-s); cursor: pointer; padding: 0; }
+.views-link:hover { text-decoration: underline; }
+.views-pop { display: flex; flex-direction: column; min-width: calc(var(--size-128) * 2.4); max-height: 280px; overflow-y: auto; }  /* max-height — layout-константа поповера */
+.views-pop__row { display: flex; align-items: center; justify-content: space-between; gap: var(--size-16); padding: var(--size-8) var(--size-12); border-bottom: 1px solid var(--border-default); }
+.views-pop__row:last-child { border-bottom: 0; }
+.views-pop__phrase { color: var(--text-default); font-size: var(--font-size-body-s); }
+.views-pop__count { color: var(--text-muted); font-size: var(--font-size-body-s); flex: 0 0 auto; }
 </style>

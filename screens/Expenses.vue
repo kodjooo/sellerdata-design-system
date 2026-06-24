@@ -182,17 +182,14 @@
         <!-- ─── Модалка выбора периода (реал: расходы__модалка-фильтр) ─── -->
         <DsModal v-model="periodOpen" title="Период" size="sm">
             <div class="period">
-                <button
+                <DsOptionCard
                     v-for="opt in periodOptions"
                     :key="opt"
-                    type="button"
-                    class="period__btn"
-                    :class="{ 'is-active': period === opt }"
-                    @click="period = opt"
-                >
-                    <span>{{ opt }}</span>
-                    <span v-if="period === opt" class="period__check fm-check" aria-hidden="true"></span>
-                </button>
+                    :title="opt"
+                    :selected="period === opt"
+                    check
+                    @select="period = opt"
+                />
             </div>
             <template #footer>
                 <DsButton variant="primary" class="period__apply" @click="periodOpen = false">Фильтровать</DsButton>
@@ -228,6 +225,7 @@ import DsIconButton from '@/Components/Ds/DsIconButton.vue';
 import DsInput from '@/Components/Ds/DsInput.vue';
 import DsSelect from '@/Components/Ds/DsSelect.vue';
 import DsCheckbox from '@/Components/Ds/DsCheckbox.vue';
+import DsOptionCard from '@/Components/Ds/DsOptionCard.vue';
 import DsTable from '@/Components/Ds/DsTable.vue';
 import DsModal from '@/Components/Ds/DsModal.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
@@ -387,20 +385,9 @@ const rows = [
 
 @media (max-width: 575.98px) { .form__row { flex-direction: column; } }
 
-/* ── Модалка периода (реал — сетка кнопок-выбора) ── */
+/* ── Модалка периода (DsOptionCard в 2 колонки; «Произвольный период» — во всю ширину) ── */
 .period { display: grid; grid-template-columns: 1fr 1fr; gap: var(--size-12); }
-.period__btn {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: var(--size-12) var(--size-16);
-    border: 1px solid var(--border-default); border-radius: var(--radius-md);
-    background: var(--surface-default); color: var(--text-default);
-    font-size: var(--font-size-body-s); cursor: pointer;
-    transition: border-color var(--transition-fast) var(--ease-standard);
-}
-.period__btn:hover { border-color: var(--border-strong); }
-.period__btn.is-active { background: var(--brand); border-color: var(--brand); color: var(--white); }
-.period__btn:last-child { grid-column: 1 / -1; }
-.period__check { color: var(--white); }
+.period :deep(.ds-option:last-child) { grid-column: 1 / -1; }
 .period__apply { width: 100%; }
 
 .del-text { color: var(--text-default); text-align: center; }

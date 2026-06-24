@@ -110,21 +110,17 @@
 
             <p class="t-label-m key-section">Выберите действие</p>
 
-            <!-- Радио-выбор действия: OAuth vs обновить ключ (реал — две карточки-варианты) -->
-            <button
+            <!-- Радио-выбор действия: OAuth vs обновить ключ (DsOptionCard — карточки-варианты) -->
+            <DsOptionCard
                 v-for="opt in keyActions"
                 :key="opt.key"
-                type="button"
                 class="key-opt"
-                :class="{ 'is-active': keyAction === opt.key }"
-                @click="keyAction = opt.key"
-            >
-                <span class="key-opt__ico" :class="opt.icon" aria-hidden="true"></span>
-                <span class="key-opt__body">
-                    <span class="t-label-m key-opt__title">{{ opt.title }}</span>
-                    <span class="t-body-s key-opt__sub">{{ opt.sub }}</span>
-                </span>
-            </button>
+                :icon="opt.icon"
+                :title="opt.title"
+                :sub="opt.sub"
+                :selected="keyAction === opt.key"
+                @select="keyAction = opt.key"
+            />
 
             <DsInput
                 v-if="keyAction === 'update'"
@@ -250,6 +246,7 @@ import DsSelect from '@/Components/Ds/DsSelect.vue';
 import DsCheckbox from '@/Components/Ds/DsCheckbox.vue';
 import DsModal from '@/Components/Ds/DsModal.vue';
 import DsNotice from '@/Components/Ds/DsNotice.vue';
+import DsOptionCard from '@/Components/Ds/DsOptionCard.vue';
 
 const hintOpen = ref(true);
 
@@ -421,27 +418,13 @@ const marketplaces = ['Wildberries', 'Ozon', 'Яндекс Маркет'];
 .key-status__sub { display: block; color: var(--text-default); }
 .key-section { color: var(--text-heading); margin-bottom: var(--size-8); }
 
-.key-opt {
-    display: flex; align-items: center; gap: var(--size-12); width: 100%;
-    padding: var(--size-12) var(--size-16); margin-bottom: var(--size-8);
-    border: 1px solid var(--border-default); border-radius: var(--radius-md);
-    background: var(--surface-default); cursor: pointer; text-align: left;
-    transition: border-color var(--transition-fast) var(--ease-standard);
-}
-.key-opt:hover { border-color: var(--border-strong); }
-.key-opt.is-active { background: var(--brand); border-color: var(--brand); }
-.key-opt.is-active .key-opt__title,
-.key-opt.is-active .key-opt__sub,
-.key-opt.is-active .key-opt__ico { color: var(--text-on-brand); }
-.key-opt__ico {
-    flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center;
+/* Карточки действия с ключом (DsOptionCard): иконка в цветном боксе + отступ между ними. */
+.key-opt { margin-bottom: var(--size-8); }
+.key-opt :deep(.ds-option__icon) {
     width: var(--size-40); height: var(--size-40); border-radius: var(--radius-md);
-    background: var(--surface-subtle); color: var(--brand); font-size: var(--font-size-title-m);
+    background: var(--surface-subtle); font-size: var(--font-size-title-m);
 }
-.key-opt.is-active .key-opt__ico { background: rgb(from var(--white) r g b / 0.2); }
-.key-opt__body { display: flex; flex-direction: column; gap: var(--size-2); }
-.key-opt__title { color: var(--text-heading); }
-.key-opt__sub { color: var(--text-muted); }
+.key-opt.is-selected :deep(.ds-option__icon) { background: rgb(from var(--white) r g b / 0.2); }
 .key-input { margin-top: var(--size-8); }
 
 /* ── Модалка «Настройки аккаунта» ── */
