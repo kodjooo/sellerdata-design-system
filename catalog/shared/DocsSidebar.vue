@@ -80,6 +80,13 @@
             <div class="dsSidebar__group">
                 <div class="dsSidebar__groupTitle">Паттерны</div>
                 <Link
+                    :href="route('designSystem.sandbox')"
+                    class="dsSidebar__link"
+                    :class="{ '_isActive': isActive('designSystem.sandbox') }"
+                >
+                    Песочница дизайнов
+                </Link>
+                <Link
                     :href="route('designSystem.patterns')"
                     class="dsSidebar__link"
                     :class="{ '_isActive': isActive('designSystem.patterns') }"

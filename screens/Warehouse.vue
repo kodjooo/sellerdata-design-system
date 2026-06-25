@@ -2,14 +2,11 @@
     <Head title="Склад — экран-эталон" />
     <ScreenShell active="warehouse" title="Склад">
         <div class="screen">
-            <!-- Онбординг-баннер с видео (реал: кликабельное превью → fullscreen видео-попап «← Склад»).
-                 Эталон: docs/reference/screens/_live__склад__мобайл-видео-попап.png -->
-            <DsVideoBanner
-                v-if="hintOpen"
-                section="Склад"
-                :text="hintText"
-                @dismiss="hintOpen = false"
-            />
+            <!-- Онбординг-баннер раздела — единый со всеми экранами (DsNotice + hint-thumb) -->
+            <DsNotice v-model:visible="hintOpen" tone="plain" collapse-mobile>
+                <template #media><span class="hint-thumb" aria-hidden="true"></span></template>
+                {{ hintText }}
+            </DsNotice>
 
             <!-- Верхний тулбар: поиск товаров + выбор складов + FBO/FBS + фильтр -->
             <div class="bar">
@@ -122,7 +119,7 @@ import DsTable from '@/Components/Ds/DsTable.vue';
 import DsTag from '@/Components/Ds/DsTag.vue';
 import DsPagination from '@/Components/Ds/DsPagination.vue';
 import DsProductCell from '@/Components/Ds/DsProductCell.vue';
-import DsVideoBanner from '@/Components/Ds/DsVideoBanner.vue';
+import DsNotice from '@/Components/Ds/DsNotice.vue';
 import DsFilterSheet from '@/Components/Ds/DsFilterSheet.vue';
 
 const hintOpen = ref(true);
@@ -234,6 +231,9 @@ function nextOrderDaysTone(row) {
 <style scoped>
 /* Без своего паддинга — отступ страницы задаёт AppShell content. */
 .screen { display: flex; flex-direction: column; gap: var(--size-16); }
+
+/* Превью-заглушка баннера-подсказки — единая со всеми экранами. */
+.hint-thumb { display: block; width: 96px; height: 56px; border-radius: var(--radius-sm); background: var(--brand-gradient); }
 
 /* Верхний тулбар */
 .bar { display: flex; align-items: center; gap: var(--size-16); flex-wrap: wrap; }
