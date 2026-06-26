@@ -218,6 +218,10 @@ const components = [
     { route: 'designSystem.tabs',        label: 'Табы' },
     { route: 'designSystem.tooltips',    label: 'Тултипы' },
     { route: 'designSystem.diagrams',    label: 'Диаграммы' },
+    { route: 'designSystem.copyField',   label: 'Поле копирования' },
+    { route: 'designSystem.callout',     label: 'Плашка-CTA' },
+    { route: 'designSystem.promoCard',   label: 'Промо-карточка' },
+    { route: 'designSystem.stepFlow',    label: 'Поток шагов' },
 ];
 
 function isActive(routeName) {
