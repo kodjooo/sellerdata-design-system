@@ -18,7 +18,6 @@
                         aria-modal="true"
                         :aria-labelledby="titleId"
                         tabindex="-1"
-                        @keydown.esc="onEsc"
                     >
                         <!-- ─── Шапка (brand-gradient) ─────────────────────── -->
                         <header class="ds-modal__header">
@@ -52,8 +51,28 @@
     </teleport>
 </template>
 
+<script>
+// Общее состояние экземпляров: скрытый v-show не владеет фокусом и scroll lock.
+const activeModals = [];
+let bodyOverflow = '';
+
+function isVisible(element) {
+    if (!element?.isConnected || element.closest('[hidden], [inert]')) return false;
+    const style = element.ownerDocument.defaultView.getComputedStyle(element);
+    return style.visibility !== 'hidden' && style.visibility !== 'collapse'
+        && element.getClientRects().length > 0;
+}
+
+function topModal() {
+    // Все backdrop имеют один z-index: последний в DOM нарисован поверх остальных.
+    return activeModals.filter((modal) => isVisible(modal.dialog())).sort((a, b) =>
+        a.dialog().compareDocumentPosition(b.dialog()) & 4 ? -1 : 1
+    ).at(-1);
+}
+</script>
+
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, provide, ref, watch } from 'vue';
 
 const props = defineProps({
     // Видимость модалки (v-model).
@@ -89,23 +108,141 @@ function close() {
 function onBackdrop() {
     if (props.closeOnBackdrop) close();
 }
-function onEsc() {
-    if (props.closeOnEsc) close();
+const modal = { dialog: () => dialogRef.value, initiator: null };
+const popups = new Set();
+let disposed = false;
+let revision = 0;
+
+// trigger/menu — геттеры DOM-элементов; регистрация возвращает функцию отписки.
+provide(Symbol.for('sellerdata:ds:focusScope'), {
+    registerPopup(popup) {
+        popups.add(popup);
+        return () => popups.delete(popup);
+    },
+});
+
+const focusableSelector = 'a[href], area[href], button, input, select, textarea, '
+    + 'iframe, object, embed, [contenteditable], [tabindex], audio[controls], video[controls], summary';
+
+function focusables(root) {
+    if (!root) return [];
+    return Array.from(root.querySelectorAll(focusableSelector)).filter((element) =>
+        element.tabIndex >= 0 && !element.matches(':disabled, [aria-disabled="true"]')
+        && isVisible(element)
+    ).sort((a, b) => (a.tabIndex || Infinity) - (b.tabIndex || Infinity));
 }
 
-// Блокируем скролл страницы и переводим фокус на окно при открытии.
+function visiblePopups() {
+    return Array.from(popups, (popup) => ({
+        trigger: popup.trigger(),
+        menu: popup.menu(),
+        close: popup.close,
+    })).filter(({ trigger, menu }) =>
+        dialogRef.value?.contains(trigger) && isVisible(trigger) && isVisible(menu)
+    );
+}
+
+function focusDialog() {
+    const dialog = dialogRef.value;
+    if (isVisible(dialog)) (focusables(dialog)[0] || dialog).focus({ preventScroll: true });
+}
+
+function onKeydown(event) {
+    if (!props.modelValue || topModal() !== modal) return;
+    const menus = visiblePopups();
+    if (event.key === 'Escape') {
+        if (menus.length) {
+            // Escape календаря не должен закрывать родительскую модалку.
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            const popup = menus.find(({ menu }) => menu.contains(event.target)) || menus.at(-1);
+            popup.close();
+            (focusables(popup.trigger)[0] || dialogRef.value)?.focus({ preventScroll: true });
+        } else if (!event.defaultPrevented && props.closeOnEsc) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            close();
+        }
+        return;
+    }
+    if (event.key !== 'Tab' || event.altKey || event.ctrlKey || event.metaKey) return;
+
+    // Пересчитываем на каждое нажатие: слоты, disabled и меню могут меняться.
+    const elements = focusables(dialogRef.value);
+    for (const { menu, trigger } of menus) {
+        const triggerElements = focusables(trigger);
+        const index = elements.indexOf(triggerElements.at(-1));
+        elements.splice(index < 0 ? elements.length : index + 1, 0, ...focusables(menu));
+    }
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    const index = elements.indexOf(document.activeElement);
+    const next = index < 0 ? (event.shiftKey ? elements.length - 1 : 0)
+        : (index + (event.shiftKey ? -1 : 1) + elements.length) % elements.length;
+    (elements[next] || dialogRef.value)?.focus({ preventScroll: true });
+}
+
+function deactivate() {
+    const index = activeModals.indexOf(modal);
+    if (index < 0) return;
+    const wasTop = topModal() === modal;
+    const ownedFocus = dialogRef.value?.contains(document.activeElement)
+        || visiblePopups().some(({ menu }) => menu.contains(document.activeElement));
+    visiblePopups().forEach(({ close }) => close());
+    activeModals.splice(index, 1);
+    document.removeEventListener('keydown', onKeydown, true);
+    // Если нижнюю модалку закрыли раньше верхней, сохраняем цепочку возврата.
+    activeModals.forEach((other) => {
+        if (dialogRef.value?.contains(other.initiator)) other.initiator = modal.initiator;
+    });
+    if (!activeModals.length) document.body.style.overflow = bodyOverflow;
+    const initiator = modal.initiator;
+    modal.initiator = null;
+    if (!wasTop && !ownedFocus) return;
+    const currentRevision = revision;
+    nextTick(() => {
+        if (revision !== currentRevision || (props.modelValue && !disposed)) return;
+        const remaining = topModal();
+        if (isVisible(initiator) && !initiator.matches(':disabled')
+            && (!remaining || remaining.dialog().contains(initiator))) {
+            initiator.focus({ preventScroll: true });
+        } else if (remaining) {
+            const dialog = remaining.dialog();
+            (focusables(dialog)[0] || dialog).focus({ preventScroll: true });
+        }
+    });
+}
+
 watch(
     () => props.modelValue,
     (open) => {
         if (typeof document === 'undefined') return;
-        document.body.style.overflow = open ? 'hidden' : '';
-        if (open) nextTick(() => dialogRef.value?.focus());
+        const currentRevision = ++revision;
+        if (!open) {
+            deactivate();
+            return;
+        }
+        modal.initiator = document.activeElement;
+        if (!activeModals.length) {
+            bodyOverflow = document.body.style.overflow;
+            document.body.style.overflow = 'hidden';
+        }
+        activeModals.push(modal);
+        document.addEventListener('keydown', onKeydown, true);
+        nextTick(() => {
+            if (!disposed && props.modelValue && revision === currentRevision && topModal() === modal) {
+                focusDialog();
+            }
+        });
     },
-    { immediate: true }
+    { immediate: true, flush: 'sync' }
 );
 
 onBeforeUnmount(() => {
-    if (typeof document !== 'undefined') document.body.style.overflow = '';
+    disposed = true;
+    revision++;
+    if (typeof document !== 'undefined') deactivate();
+    popups.clear();
 });
 </script>
 
